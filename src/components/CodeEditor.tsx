@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { X, Minimize2, Maximize2, Terminal } from 'lucide-react';
 
 interface CodeEditorProps {
   isOpen: boolean;
   onClose: () => void;
+  code?: string;
+  setCode?: (code: string) => void;
 }
 
-export function CodeEditor({ isOpen, onClose }: CodeEditorProps) {
+export function CodeEditor({ isOpen, onClose, code, setCode }: CodeEditorProps) {
   const [isMaximized, setIsMaximized] = useState(false);
+
+  // Use local state if controlled props aren't provided
+  const [localCode, setLocalCode] = useState("# Write your Python code here\ndef hello_world():\n    print('Hello, AI Learner!')\n\nhello_world()");
+
+  const currentCode = code !== undefined ? code : localCode;
+
+  const handleEditorChange = (value: string | undefined) => {
+    const newCode = value || '';
+    if (setCode) {
+      setCode(newCode);
+    } else {
+      setLocalCode(newCode);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -65,7 +81,8 @@ export function CodeEditor({ isOpen, onClose }: CodeEditorProps) {
             height="100%"
             defaultLanguage="python"
             theme="vs-dark"
-            defaultValue="# Write your Python code here&#10;def hello_world():&#10;    print('Hello, AI Learner!')&#10;&#10;hello_world()"
+            value={currentCode}
+            onChange={handleEditorChange}
             options={{
               minimap: { enabled: false },
               fontSize: 13,

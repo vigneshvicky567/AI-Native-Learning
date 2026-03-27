@@ -33,7 +33,7 @@ export default function App() {
       let session = chatSession;
       if (!session) {
         session = ai.chats.create({
-          model: 'gemini-3.1-flash-preview',
+          model: 'gemini-3-flash-preview',
           config: {
             systemInstruction: "You are a helpful AI learning assistant. Provide clear, concise, and educational answers. Use markdown for formatting.",
           }

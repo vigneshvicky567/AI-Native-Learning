@@ -10,27 +10,27 @@ interface HeaderProps {
 export function Header({ onOpenCheckpoints, onToggleEditor, isEditorOpen }: HeaderProps) {
   return (
     <header className="flex items-center justify-between w-full">
-      <div className="flex items-center gap-2 text-gray-600 font-medium w-24">
+      <div className="flex items-center gap-2 text-gray-500 font-medium w-24">
         {/* Logo removed as requested */}
       </div>
       
-      <div className="text-[13px] font-semibold text-gray-900 absolute left-1/2 transform -translate-x-1/2">
+      <div className="text-[15px] font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2 bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200">
         Daily Learner
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <button 
           onClick={onToggleEditor}
-          className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${isEditorOpen ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shadow-sm border border-gray-200 hover:bg-gray-50 ${isEditorOpen ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' : 'bg-white text-gray-500 hover:text-blue-600'}`}
           title="Toggle Code Editor"
         >
-          <Code2 size={16} />
+          <Code2 size={20} strokeWidth={2.5} />
         </button>
         <button 
           onClick={onOpenCheckpoints}
-          className="flex items-center gap-1.5 bg-[#1C1C28] text-white px-3 sm:px-4 py-2 rounded-full text-xs font-medium hover:bg-black transition-colors"
+          className="flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-sm hover:bg-gray-800 transition-all duration-200"
         >
-          <CheckSquare size={14} className="text-gray-300" />
+          <CheckSquare size={18} className="text-white/80" strokeWidth={2.5} />
           <span className="hidden sm:inline">Checkpoints</span>
         </button>
       </div>

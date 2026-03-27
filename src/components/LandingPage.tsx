@@ -18,52 +18,44 @@ export function LandingPage({ onStart }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-[#F8F9FF] relative overflow-x-hidden flex flex-col font-sans text-gray-900">
       {/* Background Gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-gradient-to-br from-blue-200/40 to-purple-300/40 rounded-full mix-blend-multiply filter blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-tl from-indigo-300/40 to-blue-200/40 rounded-full mix-blend-multiply filter blur-[120px] pointer-events-none"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-gradient-to-br from-blue-200/40 to-purple-300/40 rounded-full mix-blend-multiply filter blur-[120px]"></div>
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-tl from-indigo-300/40 to-blue-200/40 rounded-full mix-blend-multiply filter blur-[120px]"></div>
+      </div>
 
       {/* Navbar */}
-      <header className="relative z-10 flex items-center justify-between px-6 md:px-12 py-6 max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#5B50FF] rounded-sm transform rotate-45 flex items-center justify-center">
-             <div className="w-3 h-3 bg-white rounded-sm transform -rotate-45"></div>
+      <div className="sticky top-0 z-50 w-full bg-[#F8F9FF]/80 backdrop-blur-xl border-b border-white/60 shadow-sm transition-all duration-300">
+        <header className="flex items-center justify-between px-6 md:px-12 py-4 max-w-7xl mx-auto w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-[#5B50FF] rounded-sm transform rotate-45 flex items-center justify-center">
+               <div className="w-3 h-3 bg-white rounded-sm transform -rotate-45"></div>
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-[#1a1a2e]">LearnAI.</span>
           </div>
-          <span className="text-2xl font-bold tracking-tight text-[#1a1a2e]">Karla.</span>
-        </div>
-        
-        <nav className="hidden md:flex items-center bg-white/60 backdrop-blur-md rounded-full px-2 py-1.5 shadow-sm border border-white/40">
-          <a href="#" className="px-5 py-2 text-sm font-medium bg-white rounded-full shadow-sm text-gray-900">Home</a>
-          <a href="#features" className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-          <a href="#how-it-works" className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
-          <a href="#pricing" className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-        </nav>
+          
+          <nav className="hidden md:flex items-center bg-white/60 backdrop-blur-md rounded-full px-2 py-1.5 shadow-sm border border-white/40">
+            <a href="#" className="px-5 py-2 text-sm font-medium bg-white rounded-full shadow-sm text-gray-900">Home</a>
+            <a href="#features" className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+            <a href="#how-it-works" className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
+            <a href="#topics" className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Topics</a>
+          </nav>
 
-        <button className="bg-[#5B50FF] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md">
-          Contact
-        </button>
-      </header>
+          <button onClick={() => onStart('Hello!')} className="bg-[#5B50FF] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md">
+            Start Learning
+          </button>
+        </header>
+      </div>
 
       {/* Hero Content */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 text-center mt-12 md:mt-20">
         <h1 className="text-5xl md:text-7xl text-[#1a1a2e] mb-6 max-w-4xl leading-[1.15]">
-          <span className="font-serif">Automate, Engage, and</span><br />
-          <span className="font-serif italic text-[#2D2B5A]">Grow with</span> <span className="font-serif">AI Chat</span>
+          <span className="font-serif">Master any subject with</span><br />
+          <span className="font-serif italic text-[#2D2B5A]">your personal</span> <span className="font-serif">AI Tutor</span>
         </h1>
         
         <p className="text-gray-600 max-w-2xl text-lg mb-10 leading-relaxed">
-          Meet the AI chatbot that understands, learns, and delivers your personal assistant for everything from customer support to creative ideas.
+          Meet the AI tutor that adapts to your learning style, providing personalized explanations, coding environments, and interactive checklists to help you master any topic.
         </p>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-16">
-          <button className="bg-[#5B50FF] text-white px-8 py-3.5 rounded-full font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 w-full sm:w-auto">
-            Try It Free
-          </button>
-          <button className="flex items-center justify-center gap-3 bg-white/80 backdrop-blur-sm text-gray-800 px-6 py-3.5 rounded-full font-medium hover:bg-white transition-colors shadow-sm w-full sm:w-auto">
-            <div className="w-8 h-8 bg-indigo-100 text-[#5B50FF] rounded-full flex items-center justify-center">
-              <Play size={14} fill="currentColor" className="ml-0.5" />
-            </div>
-            Watch Demo
-          </button>
-        </div>
 
         {/* Hero Input Box */}
         <div className="w-full max-w-3xl bg-white/40 backdrop-blur-xl p-3 rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.04)] border border-white/60 mb-16">
@@ -72,7 +64,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Explain me about this image..."
+              placeholder="What do you want to learn today? e.g., Explain Quantum Computing..."
               className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder:text-gray-800 text-lg font-medium mb-4 px-2"
             />
             
@@ -90,7 +82,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
                 </button>
                 <button type="button" className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
                   <ImageIcon size={14} />
-                  Create Image
+                  Upload Notes
                 </button>
               </div>
               <div className="flex items-center gap-3">
@@ -104,29 +96,14 @@ export function LandingPage({ onStart }: LandingPageProps) {
             </div>
           </form>
         </div>
-
-        {/* Logos */}
-        <div className="flex flex-col items-center gap-8 pb-16 w-full max-w-4xl mx-auto px-4">
-          <div className="flex items-center gap-2 text-[#5B50FF] font-semibold">
-            <Sparkles size={20} />
-            <span className="text-[#1a1a2e] text-lg">Connect Karla to the apps you love</span>
-          </div>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 grayscale">
-            <span className="text-2xl font-bold font-serif italic">Phoenix</span>
-            <span className="text-2xl font-bold tracking-tighter">foxen</span>
-            <span className="text-2xl font-bold tracking-widest uppercase">Boycott</span>
-            <span className="text-2xl font-bold">Arts<span className="font-light">Mafia</span></span>
-            <span className="text-2xl font-bold lowercase">natural</span>
-          </div>
-        </div>
       </main>
 
       {/* Features Section */}
       <section id="features" className="relative z-10 py-24 bg-white/50 backdrop-blur-sm border-t border-white/60">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-4">Why choose Karla?</h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Everything you need to automate conversations and delight your customers at scale.</p>
+            <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-4">Why choose LearnAI?</h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Everything you need to accelerate your learning and master new skills efficiently.</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -134,24 +111,24 @@ export function LandingPage({ onStart }: LandingPageProps) {
               <div className="w-14 h-14 bg-indigo-50 text-[#5B50FF] rounded-2xl flex items-center justify-center mb-6">
                 <Zap size={28} />
               </div>
-              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3">Instant Responses</h3>
-              <p className="text-gray-600 leading-relaxed">Zero latency. Karla answers customer queries instantly, 24/7, ensuring no one is left waiting.</p>
+              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3">Interactive Coding</h3>
+              <p className="text-gray-600 leading-relaxed">Practice coding directly in the browser with our built-in Monaco editor, getting real-time feedback from your AI tutor.</p>
             </div>
             
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="w-14 h-14 bg-indigo-50 text-[#5B50FF] rounded-2xl flex items-center justify-center mb-6">
                 <Globe size={28} />
               </div>
-              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3">Global Reach</h3>
-              <p className="text-gray-600 leading-relaxed">Speak to your customers in their native tongue. Karla fluently understands and replies in over 50 languages.</p>
+              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3">Structured Learning</h3>
+              <p className="text-gray-600 leading-relaxed">Stay on track with AI-generated checklists and milestones that break down complex topics into manageable steps.</p>
             </div>
             
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="w-14 h-14 bg-indigo-50 text-[#5B50FF] rounded-2xl flex items-center justify-center mb-6">
                 <BarChart3 size={28} />
               </div>
-              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3">Smart Analytics</h3>
-              <p className="text-gray-600 leading-relaxed">Gain deep insights into customer behavior, common questions, and satisfaction scores with our dashboard.</p>
+              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3">Personalized Pace</h3>
+              <p className="text-gray-600 leading-relaxed">LearnAI adapts to your speed. It identifies your weak points and provides targeted exercises to strengthen your understanding.</p>
             </div>
           </div>
         </div>
@@ -162,29 +139,29 @@ export function LandingPage({ onStart }: LandingPageProps) {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row items-center gap-16">
             <div className="flex-1">
-              <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-6">Get started in minutes</h2>
-              <p className="text-gray-600 text-lg mb-10">No coding required. Train your AI and deploy it across your channels seamlessly.</p>
+              <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-6">Start learning in minutes</h2>
+              <p className="text-gray-600 text-lg mb-10">No setup required. Just tell the AI what you want to learn and dive right in.</p>
               
               <div className="space-y-8">
                 <div className="flex gap-4">
                   <div className="w-10 h-10 rounded-full bg-[#5B50FF] text-white flex items-center justify-center font-bold flex-shrink-0">1</div>
                   <div>
-                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-2">Connect your data</h4>
-                    <p className="text-gray-600">Upload your PDFs, link your website, or connect your knowledge base.</p>
+                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-2">Set your goal</h4>
+                    <p className="text-gray-600">Type in the topic, language, or framework you want to master.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="w-10 h-10 rounded-full bg-[#5B50FF] text-white flex items-center justify-center font-bold flex-shrink-0">2</div>
                   <div>
-                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-2">Train your AI</h4>
-                    <p className="text-gray-600">Karla learns your brand voice and product details automatically.</p>
+                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-2">Follow the plan</h4>
+                    <p className="text-gray-600">LearnAI generates a customized curriculum and interactive checklist for you.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="w-10 h-10 rounded-full bg-[#5B50FF] text-white flex items-center justify-center font-bold flex-shrink-0">3</div>
                   <div>
-                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-2">Go live</h4>
-                    <p className="text-gray-600">Deploy the widget to your website or integrate with your favorite messaging apps.</p>
+                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-2">Practice & Master</h4>
+                    <p className="text-gray-600">Use the built-in code editor and chat interface to practice and ask questions.</p>
                   </div>
                 </div>
               </div>
@@ -201,20 +178,20 @@ export function LandingPage({ onStart }: LandingPageProps) {
                       <MessageSquare size={20} />
                     </div>
                     <div>
-                      <h5 className="font-bold text-[#1a1a2e]">Karla AI</h5>
+                      <h5 className="font-bold text-[#1a1a2e]">LearnAI Tutor</h5>
                       <p className="text-xs text-green-500 font-medium">Online</p>
                     </div>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="bg-gray-50 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
-                      <p className="text-sm text-gray-700">Hi there! How can I help you today?</p>
+                      <p className="text-sm text-gray-700">Hi there! What would you like to learn today?</p>
                     </div>
                     <div className="bg-[#5B50FF] text-white rounded-2xl rounded-tr-none p-4 max-w-[85%] ml-auto">
-                      <p className="text-sm">I need help setting up my account.</p>
+                      <p className="text-sm">I want to learn React hooks, specifically useEffect.</p>
                     </div>
                     <div className="bg-gray-50 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
-                      <p className="text-sm text-gray-700">I can certainly help with that! First, could you tell me if you're setting up a personal or business account?</p>
+                      <p className="text-sm text-gray-700">Great choice! Let's start with the basics of side effects in React. I've created a checklist for us and opened the code editor so we can practice.</p>
                     </div>
                   </div>
                 </div>
@@ -224,105 +201,131 @@ export function LandingPage({ onStart }: LandingPageProps) {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="relative z-10 py-24 bg-white/50 backdrop-blur-sm border-t border-white/60">
+      {/* Explore Topics Section */}
+      <section id="topics" className="relative z-10 py-24 bg-white/40 backdrop-blur-md border-t border-white/60">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-4">Simple, transparent pricing</h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Choose the plan that best fits your needs. No hidden fees.</p>
+            <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-4">Master any subject</h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">From complex mathematics to conversational languages, LearnAI adapts to your specific needs.</p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Starter Plan */}
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col">
-              <h3 className="text-2xl font-bold text-[#1a1a2e] mb-2">Starter</h3>
-              <p className="text-gray-500 mb-6">Perfect for trying out Karla.</p>
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-[#1a1a2e]">$0</span>
-                <span className="text-gray-500">/mo</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {['Computer Science', 'Mathematics', 'Languages', 'Sciences', 'History', 'Literature', 'Business', 'Arts'].map((topic, i) => (
+              <div key={i} className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-clay-card border border-white/60 hover:-translate-y-1 hover:shadow-clay-surface transition-all duration-300 cursor-pointer text-center group">
+                <div className="w-12 h-12 mx-auto bg-indigo-50 text-[#5B50FF] rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Sparkles size={24} />
+                </div>
+                <h3 className="font-bold text-[#1a1a2e]">{topic}</h3>
               </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle2 size={20} className="text-green-500" />
-                  100 AI responses/mo
-                </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle2 size={20} className="text-green-500" />
-                  1 Data source
-                </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle2 size={20} className="text-green-500" />
-                  Standard support
-                </li>
-              </ul>
-              <button className="w-full py-3 rounded-full border-2 border-[#5B50FF] text-[#5B50FF] font-medium hover:bg-indigo-50 transition-colors">
-                Get Started
-              </button>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Pro Plan */}
-            <div className="bg-[#1a1a2e] p-8 rounded-[2rem] shadow-xl border border-gray-800 flex flex-col relative transform md:-translate-y-4">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-400 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-bold">
-                Most Popular
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
-              <p className="text-gray-400 mb-6">For growing businesses.</p>
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-white">$49</span>
-                <span className="text-gray-400">/mo</span>
-              </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-3 text-gray-300">
-                  <CheckCircle2 size={20} className="text-[#5B50FF]" />
-                  Unlimited AI responses
+      {/* Interactive Tools Section */}
+      <section id="tools" className="relative z-10 py-24">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row-reverse items-center gap-16">
+            <div className="flex-1">
+              <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-6">Tools built for understanding</h2>
+              <p className="text-gray-600 text-lg mb-8">Reading isn't enough. LearnAI provides interactive environments to test your knowledge immediately.</p>
+              
+              <ul className="space-y-6">
+                <li className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-accent-pink/10 text-[#DB2777] flex items-center justify-center flex-shrink-0 mt-1">
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-1">Smart Checklists</h4>
+                    <p className="text-gray-600">Break down massive topics into bite-sized, achievable milestones.</p>
+                  </div>
                 </li>
-                <li className="flex items-center gap-3 text-gray-300">
-                  <CheckCircle2 size={20} className="text-[#5B50FF]" />
-                  Unlimited Data sources
-                </li>
-                <li className="flex items-center gap-3 text-gray-300">
-                  <CheckCircle2 size={20} className="text-[#5B50FF]" />
-                  Advanced analytics
-                </li>
-                <li className="flex items-center gap-3 text-gray-300">
-                  <CheckCircle2 size={20} className="text-[#5B50FF]" />
-                  Priority support
+                <li className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-accent-blue/10 text-[#0EA5E9] flex items-center justify-center flex-shrink-0 mt-1">
+                    <BarChart3 size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-[#1a1a2e] mb-1">Progress Tracking</h4>
+                    <p className="text-gray-600">Visualize your learning journey and see how far you've come.</p>
+                  </div>
                 </li>
               </ul>
-              <button className="w-full py-3 rounded-full bg-[#5B50FF] text-white font-medium hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-500/30">
-                Start Free Trial
-              </button>
             </div>
+            
+            <div className="flex-1 w-full">
+              <div className="bg-white/60 backdrop-blur-xl p-6 rounded-[2.5rem] shadow-clay-surface border border-white/80 relative">
+                <div className="bg-white rounded-3xl p-6 shadow-clay-card border border-white/60">
+                  <h3 className="font-bold text-lg mb-4 text-[#1a1a2e]">Your Milestones</h3>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((item) => (
+                      <div key={item} className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${item === 1 ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}>
+                          <CheckCircle2 size={14} />
+                        </div>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className={`h-full ${item === 1 ? 'bg-green-500 w-full' : item === 2 ? 'bg-[#5B50FF] w-1/2' : 'w-0'}`}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            {/* Enterprise Plan */}
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col md:col-span-2 lg:col-span-1">
-              <h3 className="text-2xl font-bold text-[#1a1a2e] mb-2">Enterprise</h3>
-              <p className="text-gray-500 mb-6">Custom solutions for large teams.</p>
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-[#1a1a2e]">Custom</span>
+      {/* Testimonials Section */}
+      <section id="testimonials" className="relative z-10 py-24 bg-white/40 backdrop-blur-md border-t border-white/60">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-4">Loved by learners</h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">See how LearnAI is changing the way people master new skills.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { name: "Sarah J.", role: "Computer Science Student", text: "The interactive code editor combined with the AI tutor helped me finally understand React hooks. It's like having a senior developer sitting next to me." },
+              { name: "Michael T.", role: "Self-taught Designer", text: "I used LearnAI to grasp color theory and typography. The structured checklists kept me focused instead of falling down YouTube rabbit holes." },
+              { name: "Elena R.", role: "High School Teacher", text: "I recommend this to all my students for test prep. It adapts to their pace and explains concepts in ways that click for them individually." }
+            ].map((testimonial, i) => (
+              <div key={i} className="bg-white p-8 rounded-[2rem] shadow-clay-card border border-white/60 relative">
+                <div className="text-[#5B50FF] mb-4">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.017 21L16.439 16.09C16.852 15.158 17.058 14.181 17.058 13.159V3H24V13.159C24 15.8 23.341 18.225 22.022 20.434C20.704 22.643 18.91 24.368 16.641 25.609L14.017 21ZM0 21L2.422 16.09C2.835 15.158 3.041 14.181 3.041 13.159V3H10V13.159C10 15.8 9.341 18.225 8.022 20.434C6.704 22.643 4.91 24.368 2.641 25.609L0 21Z" />
+                  </svg>
+                </div>
+                <p className="text-gray-600 mb-6 leading-relaxed">"{testimonial.text}"</p>
+                <div>
+                  <h4 className="font-bold text-[#1a1a2e]">{testimonial.name}</h4>
+                  <p className="text-sm text-gray-500">{testimonial.role}</p>
+                </div>
               </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle2 size={20} className="text-green-500" />
-                  Everything in Pro
-                </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle2 size={20} className="text-green-500" />
-                  Custom integrations
-                </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle2 size={20} className="text-green-500" />
-                  Dedicated success manager
-                </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle2 size={20} className="text-green-500" />
-                  SLA guarantees
-                </li>
-              </ul>
-              <button className="w-full py-3 rounded-full border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                Contact Sales
-              </button>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="relative z-10 py-24">
+        <div className="max-w-4xl mx-auto px-6 md:px-12">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-serif text-[#1a1a2e] mb-4">Frequently Asked Questions</h2>
+            <p className="text-gray-600 text-lg">Got questions? We've got answers.</p>
+          </div>
+          
+          <div className="space-y-6">
+            {[
+              { q: "Do I need any prior knowledge to use LearnAI?", a: "Not at all! LearnAI is designed to adapt to your current skill level, whether you're a complete beginner or an advanced learner looking to fill knowledge gaps." },
+              { q: "Can I use LearnAI on my phone?", a: "Yes, LearnAI is fully responsive and works great on mobile devices, tablets, and desktops." },
+              { q: "What subjects does LearnAI cover?", a: "LearnAI can help you with a wide range of subjects, from programming and mathematics to history and literature. If there's information about it, LearnAI can teach it." },
+              { q: "How does the interactive code editor work?", a: "The built-in code editor allows you to write and execute code directly in your browser. LearnAI can review your code, suggest improvements, and help you debug errors in real-time." }
+            ].map((faq, i) => (
+              <div key={i} className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-clay-card border border-white/60">
+                <h3 className="text-xl font-bold text-[#1a1a2e] mb-3">{faq.q}</h3>
+                <p className="text-gray-600 leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -330,15 +333,15 @@ export function LandingPage({ onStart }: LandingPageProps) {
       {/* CTA Section */}
       <section className="relative z-10 py-24">
         <div className="max-w-5xl mx-auto px-6 md:px-12">
-          <div className="bg-gradient-to-br from-[#5B50FF] to-purple-600 rounded-[3rem] p-12 md:p-20 text-center text-white shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full filter blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full filter blur-3xl"></div>
+          <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] p-12 md:p-20 text-center shadow-clay-surface border border-white/80 relative overflow-hidden">
+            <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#DB2777]/20 rounded-full mix-blend-multiply filter blur-[80px] pointer-events-none animate-clay-float"></div>
+            <div className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#0EA5E9]/20 rounded-full mix-blend-multiply filter blur-[100px] pointer-events-none animate-clay-float-delayed"></div>
             
-            <h2 className="text-4xl md:text-6xl font-serif mb-6 relative z-10">Ready to transform your customer experience?</h2>
-            <p className="text-indigo-100 text-lg mb-10 max-w-2xl mx-auto relative z-10">Join thousands of businesses using Karla to automate support, engage visitors, and drive sales.</p>
+            <h2 className="text-4xl md:text-6xl font-serif mb-6 relative z-10 text-[#1a1a2e]">Ready to accelerate your learning?</h2>
+            <p className="text-gray-600 text-lg mb-10 max-w-2xl mx-auto relative z-10">Join thousands of students using LearnAI to master new skills and achieve their goals.</p>
             
-            <button className="bg-white text-[#5B50FF] px-8 py-4 rounded-full font-bold text-lg hover:bg-indigo-50 transition-colors shadow-xl flex items-center gap-2 mx-auto relative z-10">
-              Get Started for Free
+            <button onClick={() => onStart('Hello!')} className="bg-[#5B50FF] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-indigo-700 transition-colors shadow-clay-button flex items-center gap-2 mx-auto relative z-10 hover:-translate-y-1 active:scale-95">
+              Start Learning for Free
               <ArrowRight size={20} />
             </button>
           </div>
@@ -354,18 +357,17 @@ export function LandingPage({ onStart }: LandingPageProps) {
                 <div className="w-6 h-6 bg-[#5B50FF] rounded-sm transform rotate-45 flex items-center justify-center">
                    <div className="w-3 h-3 bg-white rounded-sm transform -rotate-45"></div>
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-[#1a1a2e]">Karla.</span>
+                <span className="text-2xl font-bold tracking-tight text-[#1a1a2e]">LearnAI.</span>
               </div>
-              <p className="text-gray-500 max-w-sm">Automate, engage, and grow with the world's most intelligent AI chatbot platform.</p>
+              <p className="text-gray-500 max-w-sm">Master any subject with the world's most intelligent AI learning platform.</p>
             </div>
             
             <div>
               <h4 className="font-bold text-[#1a1a2e] mb-4">Product</h4>
               <ul className="space-y-3">
                 <li><a href="#" className="text-gray-500 hover:text-[#5B50FF] transition-colors">Features</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-[#5B50FF] transition-colors">Integrations</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-[#5B50FF] transition-colors">Pricing</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-[#5B50FF] transition-colors">Changelog</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-[#5B50FF] transition-colors">Curriculum</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-[#5B50FF] transition-colors">Success Stories</a></li>
               </ul>
             </div>
             
@@ -390,7 +392,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
           </div>
           
           <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-400 text-sm">© 2026 Karla AI. All rights reserved.</p>
+            <p className="text-gray-400 text-sm">© 2026 LearnAI. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-gray-400 hover:text-[#5B50FF] transition-colors">Twitter</a>
               <a href="#" className="text-gray-400 hover:text-[#5B50FF] transition-colors">LinkedIn</a>

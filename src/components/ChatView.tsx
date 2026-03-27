@@ -17,11 +17,22 @@ interface ChatViewProps {
   messages: Message[];
   onSendMessage: (text: string) => void;
   isLoading: boolean;
+  code: string;
+  setCode: (code: string) => void;
+  isEditorOpen: boolean;
+  setIsEditorOpen: (isOpen: boolean) => void;
 }
 
-export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) {
+export function ChatView({
+  messages,
+  onSendMessage,
+  isLoading,
+  code,
+  setCode,
+  isEditorOpen,
+  setIsEditorOpen
+}: ChatViewProps) {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,7 +92,12 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
         </div>
       </main>
 
-      <CodeEditor isOpen={isEditorOpen} onClose={() => setIsEditorOpen(false)} />
+      <CodeEditor
+        isOpen={isEditorOpen}
+        onClose={() => setIsEditorOpen(false)}
+        code={code}
+        setCode={setCode}
+      />
       <ChecklistSidebar isOpen={isChecklistOpen} onClose={() => setIsChecklistOpen(false)} />
     </div>
   );

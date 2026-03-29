@@ -1,8 +1,9 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Info, AlertTriangle, CheckCircle2, ListChecks, ArrowRight } from 'lucide-react';
+import { Info, AlertTriangle, CheckCircle2, ListChecks, ArrowRight, Lightbulb } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
+import { GraphVisual } from './GraphVisual';
 
 export interface Block {
   type: string;
@@ -15,7 +16,23 @@ export interface Block {
   label?: string;
   topic?: string;
   points?: string[];
+  nodes?: any[];
+  edges?: any[];
 }
+
+const markdownComponents = {
+  code({ node, inline, className, children, ...props }: any) {
+    const match = /language-(\w+)/.exec(className || '');
+    const codeString = String(children).replace(/\n$/, '');
+    return !inline && match ? (
+      <CodeBlock language={match[1]} code={codeString} />
+    ) : (
+      <code {...props} className="bg-gray-100 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-gray-200 shadow-sm">
+        {children}
+      </code>
+    );
+  }
+};
 
 export function BlockRenderer({ blocks }: { blocks: Block[] }) {
   return (
@@ -25,7 +42,7 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
           case 'text':
             return (
               <div key={i} className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{block.content || ''}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{block.content || ''}</ReactMarkdown>
               </div>
             );
             
@@ -46,7 +63,9 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
                 <div className="flex-shrink-0 mt-0.5">{v.icon}</div>
                 <div>
                   {block.label && <h4 className={`font-bold text-sm mb-1 ${v.text}`}>{block.label}</h4>}
-                  <p className={`text-[15px] ${v.text} opacity-90 leading-relaxed`}>{block.content}</p>
+                  <div className={`text-[15px] ${v.text} opacity-90 leading-relaxed prose prose-sm max-w-none prose-p:my-0 prose-a:text-blue-600`}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{block.content || ''}</ReactMarkdown>
+                  </div>
                 </div>
               </div>
             );
@@ -60,13 +79,18 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
                     <h4 className="font-bold text-gray-900">{block.title}</h4>
                   </div>
                 )}
-                <div className="p-5">
+                <div className="p-5 relative">
                   {block.items?.map((item: string, idx: number) => (
-                    <div key={idx} className="flex gap-3.5 mb-4 last:mb-0">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold mt-0.5 shadow-sm">
+                    <div key={idx} className="flex gap-3.5 mb-4 last:mb-0 relative group">
+                      {idx !== (block.items?.length || 0) - 1 && (
+                        <div className="absolute left-[11px] top-[28px] bottom-[-16px] w-[2px] bg-gray-200"></div>
+                      )}
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold mt-0.5 shadow-sm relative z-10">
                         {idx + 1}
                       </div>
-                      <div className="text-[15px] text-gray-700 pt-0.5 leading-relaxed">{item}</div>
+                      <div className="text-[15px] text-gray-700 pt-0.5 leading-relaxed prose prose-sm max-w-none prose-p:my-0">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{item}</ReactMarkdown>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -113,6 +137,24 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
                   ))}
                 </ul>
               </div>
+            );
+            
+          case 'key_points':
+            return (
+              <div key={i} className="my-3 flex flex-row flex-wrap gap-3">
+                {block.items?.map((item: string, idx: number) => (
+                  <div key={idx} className="flex-1 min-w-[200px] bg-gray-50 border border-gray-200 border-l-4 border-l-teal-500 p-4 rounded-lg shadow-sm flex items-start gap-3">
+                    <div className="text-[14px] text-gray-800 font-medium leading-relaxed prose prose-sm max-w-none prose-p:my-0 prose-a:text-teal-700">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{item}</ReactMarkdown>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+            
+          case 'diagram':
+            return (
+              <GraphVisual key={i} title={block.title} nodes={block.nodes || []} edges={block.edges || []} />
             );
             
           default:

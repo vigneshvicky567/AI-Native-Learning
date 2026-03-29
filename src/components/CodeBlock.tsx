@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Copy, Code2 } from 'lucide-react';
+import { Check, Copy, Code2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
@@ -10,8 +10,10 @@ interface CodeBlockProps {
 
 export function CodeBlock({ language, code }: CodeBlockProps) {
   const [isCopied, setIsCopied] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
-  const handleCopy = async () => {
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       await navigator.clipboard.writeText(code);
       setIsCopied(true);
@@ -23,10 +25,14 @@ export function CodeBlock({ language, code }: CodeBlockProps) {
 
   return (
     <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm my-3 bg-[#282C34]">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50 bg-[#21252B]">
+      <div 
+        className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50 bg-[#21252B] cursor-pointer select-none"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <div className="flex items-center gap-2 text-gray-400 text-xs font-mono">
           <Code2 className="w-3.5 h-3.5" />
           <span>{language || 'text'}</span>
+          {isOpen ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
         </div>
         <button
           onClick={handleCopy}
@@ -46,13 +52,15 @@ export function CodeBlock({ language, code }: CodeBlockProps) {
           )}
         </button>
       </div>
-      <SyntaxHighlighter
-        style={oneDark}
-        language={language || 'text'}
-        customStyle={{ margin: 0, borderRadius: 0, fontSize: '13px', padding: '16px', background: 'transparent' }}
-      >
-        {code}
-      </SyntaxHighlighter>
+      {isOpen && (
+        <SyntaxHighlighter
+          style={oneDark}
+          language={language || 'text'}
+          customStyle={{ margin: 0, borderRadius: 0, fontSize: '13px', padding: '16px', background: 'transparent' }}
+        >
+          {code}
+        </SyntaxHighlighter>
+      )}
     </div>
   );
 }

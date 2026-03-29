@@ -66,6 +66,12 @@ Every object in the array MUST follow one of these exact structures:
 6. Comparison Block:
 { "type": "comparison", "topic": "A vs B", "points": ["Point 1", "Point 2"] }
 
+7. Key Points Block (For summary cards):
+{ "type": "key_points", "items": ["point1", "point2"] }
+
+8. Diagram Block (For rendering React Flow graphs):
+{ "type": "diagram", "title": "Graph Title", "nodes": [{"id": "1", "label": "Node 1", "color": "#1f2937"}], "edges": [{"source": "1", "target": "2", "label": "Edge 1"}] }
+
 # Tone & Style:
 - Use emojis in titles occasionally.
 - Keep "text" blocks concise (max 3 sentences).
@@ -75,13 +81,32 @@ Every object in the array MUST follow one of these exact structures:
         setChatSession(session);
       }
 
-      const response = await session.sendMessage({ message: text });
+      setMessages(prev => [...prev, { role: 'model', text: '' }]);
       
-      const newModelMsg: Message = { role: 'model', text: response.text || "I couldn't generate a response." };
-      setMessages(prev => [...prev, newModelMsg]);
+      const responseStream = await session.sendMessageStream({ message: text });
+      
+      let fullText = '';
+      for await (const chunk of responseStream) {
+        if (chunk.text) {
+          fullText += chunk.text;
+          setMessages(prev => {
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1].text = fullText;
+            return newMessages;
+          });
+        }
+      }
     } catch (error) {
       console.error("Error calling Gemini API:", error);
-      setMessages(prev => [...prev, { role: 'model', text: "Sorry, I encountered an error processing your request." }]);
+      setMessages(prev => {
+        const newMessages = [...prev];
+        if (newMessages[newMessages.length - 1].role === 'model' && newMessages[newMessages.length - 1].text === '') {
+          newMessages[newMessages.length - 1].text = "Sorry, I encountered an error processing your request.";
+        } else {
+          newMessages.push({ role: 'model', text: "Sorry, I encountered an error processing your request." });
+        }
+        return newMessages;
+      });
     } finally {
       setIsLoading(false);
     }

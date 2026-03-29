@@ -22,6 +22,31 @@ interface ChatViewProps {
   isLoading: boolean;
 }
 
+function tryParseBlocks(buffer: string): Block[] | null {
+  try {
+    const cleaned = buffer.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed)) return parsed;
+  } catch (e) {
+    try {
+      let cleaned = buffer.replace(/^```json\n?/, '').trim();
+      if (!cleaned.startsWith('[')) return null;
+      
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (lastBrace === -1) return []; // Return empty array to hide raw JSON while first block streams
+      
+      cleaned = cleaned.substring(0, lastBrace + 1) + ']';
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e2) {
+      // If we still can't parse it, but it started with '[', it's likely streaming JSON.
+      // Return empty array to avoid flashing raw JSON text.
+      return [];
+    }
+  }
+  return null;
+}
+
 export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -54,15 +79,11 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
                 {messages.map((msg, idx) => {
                   let parsedBlocks: Block[] | null = null;
                   if (msg.role === 'model') {
-                    try {
-                      const cleanedText = msg.text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
-                      const parsed = JSON.parse(cleanedText);
-                      if (Array.isArray(parsed)) {
-                        parsedBlocks = parsed;
-                      }
-                    } catch (e) {
-                      // Not valid JSON, fallback to markdown
-                    }
+                    parsedBlocks = tryParseBlocks(msg.text);
+                  }
+
+                  if (msg.role === 'model' && msg.text === '') {
+                    return null;
                   }
 
                   return (
@@ -82,7 +103,7 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
                                     return !inline && match ? (
                                       <CodeBlock language={match[1]} code={codeString} />
                                     ) : (
-                                      <code {...props} className={className}>
+                                      <code {...props} className="bg-gray-100 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-gray-200 shadow-sm">
                                         {children}
                                       </code>
                                     );
@@ -117,7 +138,7 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
                     </div>
                   );
                 })}
-                {isLoading && (
+                {isLoading && (messages.length === 0 || messages[messages.length - 1].role === 'user' || (messages[messages.length - 1].role === 'model' && messages[messages.length - 1].text === '')) && (
                   <div className="flex justify-start">
                     <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-6 py-5 flex items-center gap-2">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>

@@ -7,6 +7,9 @@ import { InputArea } from './InputArea';
 import { ChecklistSidebar } from './ChecklistSidebar';
 import { CodeEditor } from './CodeEditor';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { BlockRenderer, Block } from './BlockRenderer';
+import { CodeBlock } from './CodeBlock';
 
 export interface Message {
   role: 'user' | 'model';
@@ -48,19 +51,72 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
               </div>
             ) : (
               <div className="flex flex-col gap-6 py-4">
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] rounded-2xl px-6 py-4 ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-50 text-gray-900 border border-gray-200 rounded-tl-sm'}`}>
-                      {msg.role === 'model' ? (
-                        <div className="markdown-body prose prose-sm max-w-none font-sans text-gray-900">
-                          <ReactMarkdown>{msg.text}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        <p className="text-[16px] leading-relaxed font-medium">{msg.text}</p>
-                      )}
+                {messages.map((msg, idx) => {
+                  let parsedBlocks: Block[] | null = null;
+                  if (msg.role === 'model') {
+                    try {
+                      const cleanedText = msg.text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+                      const parsed = JSON.parse(cleanedText);
+                      if (Array.isArray(parsed)) {
+                        parsedBlocks = parsed;
+                      }
+                    } catch (e) {
+                      // Not valid JSON, fallback to markdown
+                    }
+                  }
+
+                  return (
+                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[85%] rounded-2xl px-6 py-4 ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-50 text-gray-900 border border-gray-200 rounded-tl-sm'}`}>
+                        {msg.role === 'model' ? (
+                          parsedBlocks ? (
+                            <BlockRenderer blocks={parsedBlocks} />
+                          ) : (
+                            <div className="markdown-body prose prose-sm max-w-none font-sans text-gray-900">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  code({ node, inline, className, children, ...props }: any) {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    const codeString = String(children).replace(/\n$/, '');
+                                    return !inline && match ? (
+                                      <CodeBlock language={match[1]} code={codeString} />
+                                    ) : (
+                                      <code {...props} className={className}>
+                                        {children}
+                                      </code>
+                                    );
+                                  },
+                                  table: ({ children }) => (
+                                    <div className="overflow-x-auto my-4">
+                                      <table className="min-w-full divide-y divide-gray-300 border border-gray-200 rounded-lg overflow-hidden">
+                                        {children}
+                                      </table>
+                                    </div>
+                                  ),
+                                  th: ({ children }) => (
+                                    <th className="bg-gray-100 px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                      {children}
+                                    </th>
+                                  ),
+                                  td: ({ children }) => (
+                                    <td className="px-4 py-3 text-sm text-gray-700 border-t border-gray-200">
+                                      {children}
+                                    </td>
+                                  ),
+                                }}
+                              >
+                                {msg.text}
+                              </ReactMarkdown>
+                            </div>
+                          )
+                        ) : (
+                          <p className="text-[16px] leading-relaxed font-medium">{msg.text}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {isLoading && (
                   <div className="flex justify-start">
                     <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-6 py-5 flex items-center gap-2">

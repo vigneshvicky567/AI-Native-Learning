@@ -38,19 +38,6 @@ export function InputArea({ onSubmit, isLoading }: InputAreaProps) {
         ) : (
           <div className="p-3">
             <div className="px-5 py-4 flex items-center gap-3 overflow-x-auto no-scrollbar">
-              {inputText === '' && (
-                <div className="flex-shrink-0 flex items-center gap-2 bg-gray-50 text-gray-900 px-3 py-1.5 rounded-full text-sm font-bold border border-gray-200 shadow-sm">
-                  <span className="text-gray-500 font-normal">@</span>
-                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] shadow-sm">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z" fill="currentColor"/>
-                      <rect x="3" y="6" width="12" height="12" rx="2" fill="currentColor"/>
-                    </svg>
-                  </div>
-                  <span className="truncate max-w-[140px] text-[14px]">React Hooks Guide</span>
-                  <span className="text-gray-500 ml-1 text-[13px] font-medium">Today</span>
-                </div>
-              )}
               <input 
                 type="text" 
                 value={inputText}

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Info, AlertTriangle, CheckCircle2, ListChecks, ArrowRight, Lightbulb } from 'lucide-react';
+import { Info, AlertTriangle, CheckCircle2, ListChecks, ArrowRight, Lightbulb, Code2 } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
 import { GraphVisual } from './GraphVisual';
 
@@ -9,6 +9,8 @@ export interface Block {
   type: string;
   content?: string;
   language?: string;
+  code?: string;
+  description?: string;
   title?: string;
   items?: string[];
   data?: Record<string, string>;
@@ -27,14 +29,14 @@ const markdownComponents = {
     return !inline && match ? (
       <CodeBlock language={match[1]} code={codeString} />
     ) : (
-      <code {...props} className="bg-gray-100 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-gray-200 shadow-sm">
+      <code {...props} className="bg-white/50 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-white/60 shadow-sm">
         {children}
       </code>
     );
   }
 };
 
-export function BlockRenderer({ blocks }: { blocks: Block[] }) {
+export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpenEditor?: (code: string, language: string) => void }) {
   return (
     <div className="flex flex-col gap-5 w-full">
       {blocks.map((block, i) => {
@@ -48,14 +50,45 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
             
           case 'code':
             return (
-              <CodeBlock key={i} language={block.language || 'text'} code={block.content || ''} />
+              <CodeBlock key={i} language={block.language || 'text'} code={block.content || block.code || ''} />
+            );
+            
+          case 'interactive_code':
+            return (
+              <div key={i} className="my-3 border border-indigo-200/50 bg-indigo-50/30 backdrop-blur-md rounded-xl overflow-hidden shadow-sm">
+                <div className="px-5 py-4 border-b border-indigo-100/50 flex items-start justify-between gap-4">
+                  <div>
+                    <h4 className="font-bold text-indigo-900 flex items-center gap-2 mb-1">
+                      <Code2 className="w-5 h-5 text-indigo-600" />
+                      Interactive Coding Exercise
+                    </h4>
+                    {block.description && (
+                      <div className="text-sm text-indigo-700 leading-relaxed">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{block.description}</ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
+                  {onOpenEditor && (
+                    <button
+                      onClick={() => onOpenEditor(block.code || '', block.language || 'python')}
+                      className="flex-shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
+                    >
+                      <Code2 className="w-4 h-4" />
+                      Solve in Editor
+                    </button>
+                  )}
+                </div>
+                <div className="p-4 bg-white/40">
+                  <CodeBlock language={block.language || 'text'} code={block.code || ''} />
+                </div>
+              </div>
             );
             
           case 'callout':
             const variants = {
-              info: { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-900', icon: <Info className="text-blue-500 w-5 h-5" /> },
-              warning: { bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-900', icon: <AlertTriangle className="text-amber-500 w-5 h-5" /> },
-              success: { bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-900', icon: <CheckCircle2 className="text-green-500 w-5 h-5" /> }
+              info: { bg: 'bg-blue-50/50 backdrop-blur-md', border: 'border-blue-500', text: 'text-blue-900', icon: <Info className="text-blue-500 w-5 h-5" /> },
+              warning: { bg: 'bg-amber-50/50 backdrop-blur-md', border: 'border-amber-500', text: 'text-amber-900', icon: <AlertTriangle className="text-amber-500 w-5 h-5" /> },
+              success: { bg: 'bg-green-50/50 backdrop-blur-md', border: 'border-green-500', text: 'text-green-900', icon: <CheckCircle2 className="text-green-500 w-5 h-5" /> }
             };
             const v = variants[block.variant as keyof typeof variants] || variants.info;
             return (
@@ -72,9 +105,9 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
             
           case 'steps':
             return (
-              <div key={i} className="my-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+              <div key={i} className="my-2 bg-white/60 backdrop-blur-md border border-white/60 rounded-xl shadow-sm overflow-hidden">
                 {block.title && (
-                  <div className="bg-gray-50 px-5 py-3.5 border-b border-gray-200 flex items-center gap-2.5">
+                  <div className="bg-white/40 px-5 py-3.5 border-b border-white/60 flex items-center gap-2.5">
                     <ListChecks className="w-5 h-5 text-blue-600" />
                     <h4 className="font-bold text-gray-900">{block.title}</h4>
                   </div>
@@ -99,20 +132,20 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
             
           case 'complexity_table':
             return (
-              <div key={i} className="my-2 overflow-hidden border border-gray-200 rounded-xl shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div key={i} className="my-2 overflow-hidden border border-white/60 rounded-xl shadow-sm">
+                <table className="min-w-full divide-y divide-white/60">
+                  <thead className="bg-white/40">
                     <tr>
                       <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Scenario</th>
                       <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Complexity</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white/60 backdrop-blur-md divide-y divide-white/60">
                     {Object.entries(block.data || {}).map(([key, value], idx) => (
-                      <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                      <tr key={idx} className={idx % 2 === 0 ? 'bg-white/60' : 'bg-white/40'}>
                         <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{key}</td>
                         <td className="px-5 py-3.5 text-sm text-gray-600">
-                          <code className="bg-gray-100 text-pink-600 px-2 py-1 rounded-md font-mono text-xs font-bold border border-gray-200 shadow-sm">{value as React.ReactNode}</code>
+                          <code className="bg-white/50 text-pink-600 px-2 py-1 rounded-md font-mono text-xs font-bold border border-white/60 shadow-sm">{value as React.ReactNode}</code>
                         </td>
                       </tr>
                     ))}
@@ -123,7 +156,7 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
             
           case 'comparison':
             return (
-              <div key={i} className="my-2 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+              <div key={i} className="my-2 bg-white/60 backdrop-blur-md border border-white/60 rounded-xl shadow-sm p-5">
                 {block.topic && <h4 className="font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                   {block.topic}
@@ -143,7 +176,7 @@ export function BlockRenderer({ blocks }: { blocks: Block[] }) {
             return (
               <div key={i} className="my-3 flex flex-row flex-wrap gap-3">
                 {block.items?.map((item: string, idx: number) => (
-                  <div key={idx} className="flex-1 min-w-[200px] bg-gray-50 border border-gray-200 border-l-4 border-l-teal-500 p-4 rounded-lg shadow-sm flex items-start gap-3">
+                  <div key={idx} className="flex-1 min-w-[200px] bg-white/60 backdrop-blur-md border border-white/60 border-l-4 border-l-teal-500 p-4 rounded-lg shadow-sm flex items-start gap-3">
                     <div className="text-[14px] text-gray-800 font-medium leading-relaxed prose prose-sm max-w-none prose-p:my-0 prose-a:text-teal-700">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{item}</ReactMarkdown>
                     </div>

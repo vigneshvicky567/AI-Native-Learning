@@ -5,7 +5,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-16 sm:w-20 flex-col items-center py-6 z-20">
+      <aside className="hidden md:flex w-16 sm:w-20 flex-col items-center py-6 z-20 bg-white/20 backdrop-blur-sm border-r border-white/40">
         <div className="mb-8">
           <button className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-sm hover:bg-blue-700 transition-all duration-200">
             <Plus size={24} strokeWidth={2.5} />
@@ -38,7 +38,7 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40 px-2 pb-safe shadow-lg">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/60 backdrop-blur-md border-t border-white/60 flex justify-around items-center h-16 z-40 px-2 pb-safe shadow-lg">
         <button className="p-3 text-gray-500 hover:text-blue-600 transition-colors">
           <Search size={24} strokeWidth={2.5} />
         </button>

@@ -14,14 +14,14 @@ export function Header({ onOpenCheckpoints, onToggleEditor, isEditorOpen }: Head
         {/* Logo removed as requested */}
       </div>
       
-      <div className="text-[15px] font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2 bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200">
+      <div className="text-[15px] font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2 bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-full shadow-sm border border-white/60">
         Daily Learner
       </div>
       
       <div className="flex items-center gap-3">
         <button 
           onClick={onToggleEditor}
-          className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shadow-sm border border-gray-200 hover:bg-gray-50 ${isEditorOpen ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' : 'bg-white text-gray-500 hover:text-blue-600'}`}
+          className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shadow-sm border hover:bg-white/80 ${isEditorOpen ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' : 'bg-white/60 backdrop-blur-md border-white/60 text-gray-500 hover:text-blue-600'}`}
           title="Toggle Code Editor"
         >
           <Code2 size={20} strokeWidth={2.5} />

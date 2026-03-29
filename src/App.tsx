@@ -8,6 +8,8 @@ import { LandingPage } from './components/LandingPage';
 import { ChatView, Message } from './components/ChatView';
 import { GoogleGenAI } from '@google/genai';
 
+// BACKEND ARCHITECTURE: Remove this initialization. 
+// The Gemini SDK should only be initialized on your FastAPI backend to keep your API key secure.
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -22,14 +24,45 @@ export default function App() {
     await sendMessage(initialPrompt);
   };
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+  const sendMessage = async (text: string, files: File[] = []) => {
+    if (!text.trim() && files.length === 0) return;
 
-    const newUserMsg: Message = { role: 'user', text };
+    const newUserMsg: Message = { 
+      role: 'user', 
+      text,
+      files: files.map(f => ({ name: f.name, type: f.type, url: URL.createObjectURL(f) }))
+    };
     setMessages(prev => [...prev, newUserMsg]);
     setIsLoading(true);
 
     try {
+      // BACKEND ARCHITECTURE: Instead of calling the Gemini SDK directly here,
+      // you should make a fetch call to your FastAPI endpoint (e.g., POST /api/chat/message).
+      // Example:
+      // const response = await fetch('http://localhost:8000/api/chat/message', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ message: text, files: filesBase64 })
+      // });
+      // Then, you would read the streaming response from your backend.
+
+      const fileToGenerativePart = async (file: File) => {
+        const base64EncodedDataPromise = new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(file);
+        });
+        return {
+          inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+        };
+      };
+
+      const parts: any[] = [];
+      if (text.trim()) parts.push(text);
+      for (const file of files) {
+        parts.push(await fileToGenerativePart(file));
+      }
+
       let session = chatSession;
       if (!session) {
         session = ai.chats.create({
@@ -72,6 +105,9 @@ Every object in the array MUST follow one of these exact structures:
 8. Diagram Block (For rendering React Flow graphs):
 { "type": "diagram", "title": "Graph Title", "nodes": [{"id": "1", "label": "Node 1", "color": "#1f2937"}], "edges": [{"source": "1", "target": "2", "label": "Edge 1"}] }
 
+9. Interactive Code Block (Use this when acting as a coding partner, reviewer, or for step-by-step learning where the user needs to fill in the blanks or write code):
+{ "type": "interactive_code", "language": "python", "code": "def solve():\\n    # TODO: Fill in the blank\\n    __\\n    return result", "description": "Brief instruction for the user" }
+
 # Tone & Style:
 - Use emojis in titles occasionally.
 - Keep "text" blocks concise (max 3 sentences).
@@ -83,7 +119,7 @@ Every object in the array MUST follow one of these exact structures:
 
       setMessages(prev => [...prev, { role: 'model', text: '' }]);
       
-      const responseStream = await session.sendMessageStream({ message: text });
+      const responseStream = await session.sendMessageStream({ message: parts.length > 0 ? parts : text });
       
       let fullText = '';
       for await (const chunk of responseStream) {

@@ -24,9 +24,9 @@ export function CodeBlock({ language, code }: CodeBlockProps) {
   };
 
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm my-3 bg-[#282C34]">
+    <div className="rounded-xl overflow-hidden border border-white/20 shadow-sm my-3 bg-[#282C34]/80 backdrop-blur-md">
       <div 
-        className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50 bg-[#21252B] cursor-pointer select-none"
+        className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#21252B]/80 cursor-pointer select-none"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2 text-gray-400 text-xs font-mono">

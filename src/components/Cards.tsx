@@ -4,8 +4,8 @@ export function Cards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative w-full max-w-4xl mx-auto px-2 font-sans">
       {/* Card 1 */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[220px] hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
-        <div className="mb-4 w-14 h-14 rounded-xl bg-pink-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+      <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-white/60 flex flex-col h-[220px] hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
+        <div className="mb-4 w-14 h-14 rounded-xl bg-pink-50/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {/* Stacked Layers Icon */}
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 12L8 18L20 24L32 18L20 12Z" fill="#DB2777"/>
@@ -20,8 +20,8 @@ export function Cards() {
       </div>
 
       {/* Card 2 - Staggered down */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[220px] mt-0 md:mt-8 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
-        <div className="mb-4 w-14 h-14 rounded-xl bg-purple-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+      <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-white/60 flex flex-col h-[220px] mt-0 md:mt-8 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
+        <div className="mb-4 w-14 h-14 rounded-xl bg-purple-50/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {/* Generic Book/Study Icon */}
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="10" width="28" height="20" rx="4" fill="#7C3AED" fillOpacity="0.2" stroke="#7C3AED" strokeWidth="2"/>
@@ -36,7 +36,7 @@ export function Cards() {
       </div>
 
       {/* Card 3 */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[220px] mt-6 md:mt-0 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group relative">
+      <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-white/60 flex flex-col h-[220px] mt-6 md:mt-0 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group relative">
         
         {/* Robot Character */}
         <div className="absolute -top-[80px] right-0 z-10 animate-bounce pointer-events-none scale-[0.7] origin-bottom-right">

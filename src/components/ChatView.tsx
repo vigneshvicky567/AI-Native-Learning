@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BlockRenderer, Block } from './BlockRenderer';
 import { CodeBlock } from './CodeBlock';
+import { LoadingBreadcrumb } from './ui/animated-loading-svg-text-shimmer';
 
 export interface Message {
   role: 'user' | 'model';
@@ -21,6 +22,8 @@ interface ChatViewProps {
   messages: Message[];
   onSendMessage: (text: string, files?: File[]) => void;
   isLoading: boolean;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 function tryParseBlocks(buffer: string): Block[] | null {
@@ -48,7 +51,7 @@ function tryParseBlocks(buffer: string): Block[] | null {
   return null;
 }
 
-export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) {
+export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggleDarkMode }: ChatViewProps) {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editorCode, setEditorCode] = useState('');
@@ -84,18 +87,19 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
 
   return (
     <div 
-      className="flex flex-col md:flex-row h-[100dvh] w-full p-0 md:p-2 lg:p-3 font-sans overflow-hidden relative bg-[#F8F9FF]"
+      className="flex flex-col md:flex-row h-[100dvh] w-full p-0 md:p-3 lg:p-4 font-sans overflow-hidden relative bg-[#fcfcfc] dark:bg-[#050505]"
     >
-      {/* Background Gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-gradient-to-br from-blue-200/60 to-purple-300/60 rounded-full mix-blend-multiply filter blur-[120px]"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-tl from-indigo-300/60 to-blue-200/60 rounded-full mix-blend-multiply filter blur-[120px]"></div>
-      </div>
-
-      <Sidebar />
+      <Sidebar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       
-      <main className="flex-1 relative overflow-hidden bg-white/40 backdrop-blur-md md:rounded-2xl shadow-sm flex flex-col md:ml-2 border border-white/60 pb-16 md:pb-0 z-10">
-        <div className="flex-1 overflow-y-auto relative z-10 flex flex-col px-4 sm:px-6 lg:px-8 py-4">
+      <main className="flex-1 relative flex flex-col md:ml-2 pb-16 md:pb-0 z-10">
+        <div className="flex-1 relative overflow-hidden flex flex-col bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] border-0 md:border border-white/80 dark:border-[#1a1a1a] shadow-2xl">
+          {/* Background Gradients */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 dark:hidden">
+            <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-gradient-to-br from-blue-200/60 to-purple-300/60 rounded-full mix-blend-multiply filter blur-[120px]"></div>
+            <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-tl from-indigo-300/60 to-blue-200/60 rounded-full mix-blend-multiply filter blur-[120px]"></div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto relative z-10 flex flex-col px-4 sm:px-6 lg:px-8 py-6">
           <Header 
             onOpenCheckpoints={() => setIsChecklistOpen(true)} 
             onToggleEditor={() => setIsEditorOpen(!isEditorOpen)}
@@ -122,12 +126,12 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
 
                   return (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] rounded-2xl px-6 py-4 ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white/60 backdrop-blur-md text-gray-900 border border-white/60 rounded-tl-sm'}`}>
+                      <div className={`max-w-[85%] py-4 ${msg.role === 'user' ? 'bg-gray-100/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 rounded-3xl px-6' : 'bg-transparent text-gray-900 dark:text-gray-100 px-2'}`}>
                         {msg.role === 'model' ? (
                           parsedBlocks ? (
                             <BlockRenderer blocks={parsedBlocks} onOpenEditor={handleOpenEditor} />
                           ) : (
-                            <div className="markdown-body prose prose-sm max-w-none font-sans text-gray-900">
+                            <div className="markdown-body prose prose-sm max-w-none font-sans text-gray-900 dark:text-gray-100">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
@@ -137,20 +141,20 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
                                     return !inline && match ? (
                                       <CodeBlock language={match[1]} code={codeString} />
                                     ) : (
-                                      <code {...props} className="bg-white/50 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-white/60 shadow-sm">
+                                      <code {...props} className="bg-gray-50 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-gray-200 shadow-sm">
                                         {children}
                                       </code>
                                     );
                                   },
                                   table: ({ children }) => (
                                     <div className="overflow-x-auto my-4">
-                                      <table className="min-w-full divide-y divide-white/60 border border-white/60 rounded-lg overflow-hidden">
+                                      <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
                                         {children}
                                       </table>
                                     </div>
                                   ),
                                   th: ({ children }) => (
-                                    <th className="bg-white/50 px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                    <th className="bg-gray-50 px-4 py-3 text-left text-sm font-semibold text-gray-900">
                                       {children}
                                     </th>
                                   ),
@@ -189,10 +193,8 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
                 })}
                 {isLoading && (messages.length === 0 || messages[messages.length - 1].role === 'user' || (messages[messages.length - 1].role === 'model' && messages[messages.length - 1].text === '')) && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-6 py-5 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    <div className="bg-transparent px-2 py-4 flex items-center gap-2">
+                      <LoadingBreadcrumb text="Thinking" />
                     </div>
                   </div>
                 )}
@@ -205,6 +207,7 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
             <InputArea onSubmit={onSendMessage} isLoading={isLoading} />
           </div>
         </div>
+        </div>
       </main>
 
       <CodeEditor 
@@ -214,6 +217,7 @@ export function ChatView({ messages, onSendMessage, isLoading }: ChatViewProps) 
         language={editorLanguage}
         onRunCode={handleRunCode}
         isLoading={isLoading}
+        isDarkMode={isDarkMode}
       />
       <ChecklistSidebar isOpen={isChecklistOpen} onClose={() => setIsChecklistOpen(false)} />
     </div>

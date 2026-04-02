@@ -41,10 +41,10 @@ export function GraphVisual({ title, nodes, edges }: GraphVisualProps) {
   }, [edges]);
 
   return (
-    <div className="my-3 border border-gray-200 rounded-xl shadow-sm overflow-hidden bg-white flex flex-col">
+    <div className="my-3 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden bg-transparent flex flex-col">
       {title && (
-        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-          <h4 className="font-bold text-gray-900 text-sm">{title}</h4>
+        <div className="bg-gray-50/50 dark:bg-gray-800/50 px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+          <h4 className="font-bold text-gray-900 dark:text-gray-100 text-sm">{title}</h4>
         </div>
       )}
       <div className="h-[400px] w-full relative">

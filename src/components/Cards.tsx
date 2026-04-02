@@ -4,8 +4,8 @@ export function Cards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative w-full max-w-4xl mx-auto px-2 font-sans">
       {/* Card 1 */}
-      <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-white/60 flex flex-col h-[220px] hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
-        <div className="mb-4 w-14 h-14 rounded-xl bg-pink-50/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+      <div className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
+        <div className="mb-4 w-14 h-14 rounded-xl bg-pink-50/80 dark:bg-pink-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {/* Stacked Layers Icon */}
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 12L8 18L20 24L32 18L20 12Z" fill="#DB2777"/>
@@ -13,15 +13,15 @@ export function Cards() {
             <path d="M8 26L20 32L32 26" stroke="#DB2777" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <p className="text-gray-700 text-[15px] leading-relaxed mb-auto font-medium">
+        <p className="text-gray-700 dark:text-gray-300 text-[15px] leading-relaxed mb-auto font-medium">
           Start your journey into programming with interactive Python lessons.
         </p>
-        <span className="text-[13px] text-gray-500 font-bold mt-4 uppercase tracking-wider">Python</span>
+        <span className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mt-4 uppercase tracking-wider">Python</span>
       </div>
 
       {/* Card 2 - Staggered down */}
-      <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-white/60 flex flex-col h-[220px] mt-0 md:mt-8 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
-        <div className="mb-4 w-14 h-14 rounded-xl bg-purple-50/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+      <div className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] mt-0 md:mt-8 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
+        <div className="mb-4 w-14 h-14 rounded-xl bg-purple-50/80 dark:bg-purple-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {/* Generic Book/Study Icon */}
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="10" width="28" height="20" rx="4" fill="#7C3AED" fillOpacity="0.2" stroke="#7C3AED" strokeWidth="2"/>
@@ -29,22 +29,22 @@ export function Cards() {
             <path d="M14 22H22" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </div>
-        <p className="text-gray-700 text-[15px] leading-relaxed mb-auto font-medium">
+        <p className="text-gray-700 dark:text-gray-300 text-[15px] leading-relaxed mb-auto font-medium">
           Dive deep into limits, derivatives, and integrals with AI-guided problem solving.
         </p>
-        <span className="text-[13px] text-gray-500 font-bold mt-4 uppercase tracking-wider">Calculus</span>
+        <span className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mt-4 uppercase tracking-wider">Calculus</span>
       </div>
 
       {/* Card 3 */}
-      <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-white/60 flex flex-col h-[220px] mt-6 md:mt-0 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group relative">
+      <div className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] mt-6 md:mt-0 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group relative">
         
         {/* Robot Character */}
         <div className="absolute -top-[80px] right-0 z-10 animate-bounce pointer-events-none scale-[0.7] origin-bottom-right">
           <div className="relative">
             {/* Speech Bubble */}
-            <div className="absolute -top-6 -right-10 bg-white px-4 py-3 rounded-xl shadow-md text-sm font-bold text-gray-900 whitespace-nowrap border border-gray-200 z-20">
-              Hey there! 👋<br/><span className="text-blue-600">Need a boost?</span>
-              <div className="absolute -bottom-2 left-8 w-4 h-4 bg-white border-b border-r border-gray-200 transform rotate-45"></div>
+            <div className="absolute -top-6 -right-10 bg-white dark:bg-gray-800 px-4 py-3 rounded-xl shadow-md text-sm font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap border border-gray-200 dark:border-gray-700 z-20">
+              Hey there! 👋<br/><span className="text-blue-600 dark:text-blue-400">Need a boost?</span>
+              <div className="absolute -bottom-2 left-8 w-4 h-4 bg-white dark:bg-gray-800 border-b border-r border-gray-200 dark:border-gray-700 transform rotate-45"></div>
             </div>
             
             {/* Robot SVG */}
@@ -82,7 +82,7 @@ export function Cards() {
           </div>
         </div>
 
-        <div className="mb-4 w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+        <div className="mb-4 w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {/* Generic Calendar Icon */}
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="8" y="10" width="24" height="24" rx="4" fill="#0EA5E9" fillOpacity="0.2" stroke="#0EA5E9" strokeWidth="2"/>
@@ -93,10 +93,10 @@ export function Cards() {
             <circle cx="24" cy="24" r="2" fill="#0EA5E9"/>
           </svg>
         </div>
-        <p className="text-gray-700 text-[15px] leading-relaxed mb-auto font-medium">
+        <p className="text-gray-700 dark:text-gray-300 text-[15px] leading-relaxed mb-auto font-medium">
           Organize your time efficiently, set clear priorities, and stay focused.
         </p>
-        <span className="text-[13px] text-gray-500 font-bold mt-4 uppercase tracking-wider">Planning</span>
+        <span className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mt-4 uppercase tracking-wider">Planning</span>
       </div>
     </div>
   );

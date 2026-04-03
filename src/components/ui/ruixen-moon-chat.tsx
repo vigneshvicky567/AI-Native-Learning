@@ -5,17 +5,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  ImageIcon,
-  FileUp,
-  MonitorIcon,
-  CircleUserRound,
-  ArrowUpIcon,
-  Paperclip,
-  PlusIcon,
+  ArrowDownUp,
+  Network,
+  GitMerge,
+  BrainCircuit,
+  Search,
+  Activity,
   Code2,
-  Palette,
-  Layers,
-  Rocket,
+  Lightbulb,
+  Paperclip,
+  ArrowUpIcon
 } from "lucide-react";
 
 interface AutoResizeProps {
@@ -142,14 +141,31 @@ export default function RuixenMoonChat({ onStart }: { onStart?: (prompt: string)
         {/* Quick Actions */}
         <div className="flex items-center justify-start md:justify-center overflow-x-auto no-scrollbar w-full pb-2 md:pb-0 md:flex-wrap gap-2 md:gap-3 mt-6 px-1 md:px-0">
           <div className="flex items-center gap-2 md:gap-3 flex-nowrap md:flex-wrap w-max md:w-auto mx-auto">
-            <QuickAction icon={<Code2 className="w-4 h-4" />} label="Generate Code" onClick={() => onStart?.("Generate Code")} />
-            <QuickAction icon={<Rocket className="w-4 h-4" />} label="Launch App" onClick={() => onStart?.("Launch App")} />
-            <QuickAction icon={<Layers className="w-4 h-4" />} label="UI Components" onClick={() => onStart?.("UI Components")} />
-            <QuickAction icon={<Palette className="w-4 h-4" />} label="Theme Ideas" onClick={() => onStart?.("Theme Ideas")} />
-            <QuickAction icon={<CircleUserRound className="w-4 h-4" />} label="User Dashboard" onClick={() => onStart?.("User Dashboard")} />
-            <QuickAction icon={<MonitorIcon className="w-4 h-4" />} label="Landing Page" onClick={() => onStart?.("Landing Page")} />
-            <QuickAction icon={<FileUp className="w-4 h-4" />} label="Upload Docs" onClick={() => onStart?.("Upload Docs")} />
-            <QuickAction icon={<ImageIcon className="w-4 h-4" />} label="Image Assets" onClick={() => onStart?.("Image Assets")} />
+            <QuickAction 
+              icon={<Lightbulb className="w-4 h-4" />} 
+              label="Learn" 
+              onClick={() => onStart?.("Explain the fundamental concepts of algorithms and data structures to a beginner. Start with arrays and linked lists.")} 
+            />
+            <QuickAction 
+              icon={<Code2 className="w-4 h-4" />} 
+              label="Code" 
+              onClick={() => onStart?.("Generate a clean, well-commented Python implementation of the Merge Sort algorithm, including its time and space complexity.")} 
+            />
+            <QuickAction 
+              icon={<Activity className="w-4 h-4" />} 
+              label="Simulate" 
+              onClick={() => onStart?.("Simulate the execution of Dijkstra's shortest path algorithm on a small sample graph, showing the step-by-step state changes.")} 
+            />
+            <QuickAction 
+              icon={<Network className="w-4 h-4" />} 
+              label="Visualize" 
+              onClick={() => onStart?.("Create a visual diagram representing a Binary Search Tree (BST) and explain how insertion works visually.")} 
+            />
+            <QuickAction 
+              icon={<BrainCircuit className="w-4 h-4" />} 
+              label="Patterns" 
+              onClick={() => onStart?.("What are the most common algorithmic patterns (like Sliding Window, Two Pointers) used in coding interviews? Provide examples.")} 
+            />
           </div>
         </div>
       </div>

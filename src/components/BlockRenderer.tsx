@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Info, AlertTriangle, CheckCircle2, ListChecks, ArrowRight, Lightbulb, Code2 } from 'lucide-react';
+import { Info, AlertTriangle, CheckCircle2, ListChecks, ArrowRight, Lightbulb, Code2, BrainCircuit } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
 import { GraphVisual } from './GraphVisual';
 
@@ -20,6 +20,10 @@ export interface Block {
   points?: string[];
   nodes?: any[];
   edges?: any[];
+  question?: string;
+  options?: string[];
+  answer?: number;
+  explanation?: string;
 }
 
 const markdownComponents = {
@@ -35,6 +39,60 @@ const markdownComponents = {
     );
   }
 };
+
+function QuizBlock({ block }: { block: Block }) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  const handleSelect = (idx: number) => {
+    if (showAnswer) return;
+    setSelected(idx);
+    setShowAnswer(true);
+  };
+
+  return (
+    <div className="my-4 border border-indigo-200 dark:border-indigo-900 rounded-xl overflow-hidden bg-indigo-50/30 dark:bg-indigo-900/10">
+      <div className="bg-indigo-100/50 dark:bg-indigo-900/30 px-4 py-3 border-b border-indigo-200 dark:border-indigo-900 flex items-center gap-2">
+        <BrainCircuit className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+        <h4 className="font-bold text-indigo-900 dark:text-indigo-100 text-sm">Knowledge Check</h4>
+      </div>
+      <div className="p-4">
+        <p className="text-gray-800 dark:text-gray-200 font-medium mb-4">{block.question}</p>
+        <div className="flex flex-col gap-2">
+          {block.options?.map((opt: string, i: number) => {
+            const isCorrect = i === block.answer;
+            const isSelected = i === selected;
+            
+            let btnClass = "text-left px-4 py-3 rounded-lg border transition-all ";
+            if (!showAnswer) {
+              btnClass += "border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 hover:border-indigo-300 text-gray-700 dark:text-gray-300";
+            } else {
+              if (isCorrect) {
+                btnClass += "bg-green-100 border-green-500 dark:bg-green-900/30 dark:border-green-500 text-green-900 dark:text-green-100 font-medium";
+              } else if (isSelected && !isCorrect) {
+                btnClass += "bg-red-100 border-red-500 dark:bg-red-900/30 dark:border-red-500 text-red-900 dark:text-red-100";
+              } else {
+                btnClass += "border-gray-200 dark:border-gray-700 opacity-50 text-gray-500 dark:text-gray-400";
+              }
+            }
+
+            return (
+              <button key={i} onClick={() => handleSelect(i)} disabled={showAnswer} className={btnClass}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+        {showAnswer && (
+          <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300">
+            <span className="font-bold mr-2">{selected === block.answer ? "✅ Correct!" : "❌ Incorrect."}</span>
+            {block.explanation}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpenEditor?: (code: string, language: string) => void }) {
   return (
@@ -189,6 +247,9 @@ export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpe
             return (
               <GraphVisual key={i} title={block.title} nodes={block.nodes || []} edges={block.edges || []} />
             );
+            
+          case 'quiz':
+            return <QuizBlock key={i} block={block} />;
             
           default:
             return null;

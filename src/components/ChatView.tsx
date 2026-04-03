@@ -27,28 +27,37 @@ interface ChatViewProps {
 }
 
 function tryParseBlocks(buffer: string): Block[] | null {
+  let cleaned = buffer.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+  
+  // Try parsing the whole thing first
   try {
-    const cleaned = buffer.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
     const parsed = JSON.parse(cleaned);
     if (Array.isArray(parsed)) return parsed;
   } catch (e) {
-    try {
-      let cleaned = buffer.replace(/^```json\n?/, '').trim();
-      if (!cleaned.startsWith('[')) return null;
-      
-      const lastBrace = cleaned.lastIndexOf('}');
-      if (lastBrace === -1) return []; // Return empty array to hide raw JSON while first block streams
-      
-      cleaned = cleaned.substring(0, lastBrace + 1) + ']';
-      const parsed = JSON.parse(cleaned);
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e2) {
-      // If we still can't parse it, but it started with '[', it's likely streaming JSON.
-      // Return empty array to avoid flashing raw JSON text.
-      return [];
-    }
+    // ignore
   }
-  return null;
+
+  // If it doesn't start with [, it might be raw text
+  if (!cleaned.startsWith('[')) {
+    return null;
+  }
+
+  // It's a partial JSON array. Let's try to extract as many complete objects as possible.
+  // A simple way is to find the last `}` and try to parse. If it fails, find the previous `}` and try again.
+  let lastBrace = cleaned.lastIndexOf('}');
+  while (lastBrace !== -1) {
+    try {
+      const partial = cleaned.substring(0, lastBrace + 1) + ']';
+      const parsed = JSON.parse(partial);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      // ignore and try the previous brace
+    }
+    lastBrace = cleaned.lastIndexOf('}', lastBrace - 1);
+  }
+
+  // If we couldn't parse any objects, but it started with '[', return empty array to avoid flashing raw text
+  return [];
 }
 
 export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggleDarkMode }: ChatViewProps) {

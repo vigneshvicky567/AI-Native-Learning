@@ -208,13 +208,13 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     >
       <div className="flex items-center gap-2 mb-3">
         <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-        <span className="font-mono text-sm text-white/80">{formatTime(time)}</span>
+        <span className="font-mono text-sm text-gray-700 dark:text-white/80">{formatTime(time)}</span>
       </div>
       <div className="w-full h-10 flex items-center justify-center gap-0.5 px-4">
         {[...Array(visualizerBars)].map((_, i) => (
           <div
             key={i}
-            className="w-0.5 rounded-full bg-white/50 animate-pulse"
+            className="w-0.5 rounded-full bg-gray-400 dark:bg-white/50 animate-pulse"
             style={{
               height: `${Math.max(15, Math.random() * 100)}%`,
               animationDelay: `${i * 0.05}s`,
@@ -809,7 +809,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                 isRecording
                   ? "bg-transparent hover:bg-gray-200/50 text-red-500 hover:text-red-400"
                   : hasContent
-                  ? "bg-blue-600 hover:bg-blue-700 text-white hover:text-white"
+                  ? "bg-white hover:bg-gray-100 text-black shadow-sm border border-gray-200 dark:border-gray-700"
                   : "bg-transparent hover:bg-gray-200/50 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               )}
               onClick={() => {
@@ -820,11 +820,11 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               disabled={isLoading && !hasContent}
             >
               {isLoading ? (
-                <Square className="h-4 w-4 fill-white animate-pulse" />
+                <Square className="h-4 w-4 fill-black animate-pulse" />
               ) : isRecording ? (
                 <StopCircle className="h-5 w-5 text-red-500" />
               ) : hasContent ? (
-                <ArrowUp className="h-4 w-4 text-white" />
+                <ArrowUp className="h-4 w-4 text-black" />
               ) : (
                 <Mic className="h-5 w-5 text-gray-500 transition-colors" />
               )}

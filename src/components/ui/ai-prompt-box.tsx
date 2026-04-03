@@ -810,7 +810,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                   ? "bg-transparent hover:bg-gray-200/50 text-red-500 hover:text-red-400"
                   : hasContent
                   ? "bg-blue-600 hover:bg-blue-700 text-white hover:text-white"
-                  : "bg-transparent hover:bg-gray-200/50 text-gray-500 hover:text-gray-700"
+                  : "bg-transparent hover:bg-gray-200/50 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               )}
               onClick={() => {
                 if (isRecording) setIsRecording(false);

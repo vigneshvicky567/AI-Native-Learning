@@ -74,13 +74,13 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
 
       <div 
         className={`
-          flex flex-col shadow-2xl ease-in-out z-50 font-sans bg-[#fcfcfc]/95 dark:bg-[#050505]/95 backdrop-blur-xl
+          flex flex-col shadow-2xl ease-in-out z-50 font-sans bg-[#050505]/95 backdrop-blur-xl
           ${(!isDraggingWidth && !isDraggingHeight) ? 'transition-all duration-300' : ''}
           ${isMaximized 
             ? 'fixed inset-0 md:inset-4 md:rounded-2xl' 
             : 'fixed bottom-0 left-0 right-0 rounded-t-2xl md:relative md:rounded-2xl md:ml-2 md:w-[var(--editor-width)] md:self-end'
           }
-          border border-gray-200 dark:border-gray-800 overflow-hidden
+          border border-gray-800 overflow-hidden
         `}
         style={{
           ...(!isMaximized ? { 
@@ -108,14 +108,14 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
           </>
         )}
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-transparent border-b border-gray-200 dark:border-gray-800 cursor-default select-none">
+        <div className="flex items-center justify-between px-5 py-4 bg-transparent border-b border-gray-800 cursor-default select-none">
           <div className="flex items-center gap-4">
             <div className="flex gap-2">
               <div className="w-3.5 h-3.5 rounded-full bg-[#FF5F56]"></div>
               <div className="w-3.5 h-3.5 rounded-full bg-[#FFBD2E]"></div>
               <div className="w-3.5 h-3.5 rounded-full bg-[#27C93F]"></div>
             </div>
-            <div className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300 font-bold bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="flex items-center gap-2 text-[13px] text-gray-300 font-bold bg-gray-800 px-3 py-1.5 rounded-md border border-gray-700 shadow-sm">
               <Terminal size={14} />
               <span>main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : language === 'typescript' ? 'ts' : language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : 'txt'}</span>
             </div>
@@ -125,7 +125,7 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
               <button 
                 onClick={handleRun}
                 disabled={isLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 dark:disabled:bg-blue-800 disabled:text-white/70 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:text-white/70 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
               >
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
                 {isLoading ? 'Running...' : 'Run Code'}
@@ -133,14 +133,14 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
             )}
             <button 
               onClick={() => setIsMaximized(!isMaximized)} 
-              className="w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 bg-transparent rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-100 bg-transparent rounded-md border border-gray-700 hover:bg-gray-800 transition-all duration-200"
               title={isMaximized ? "Minimize" : "Maximize"}
             >
               {isMaximized ? <Minimize2 size={14} strokeWidth={2.5} /> : <Maximize2 size={14} strokeWidth={2.5} />}
             </button>
             <button 
               onClick={onClose} 
-              className="w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 bg-transparent rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-100 bg-transparent rounded-md border border-gray-700 hover:bg-gray-800 transition-all duration-200"
               title="Close Editor"
             >
               <X size={16} strokeWidth={2.5} />
@@ -153,7 +153,7 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
           <Editor
             height="100%"
             language={language}
-            theme={isDarkMode ? 'transparentThemeDark' : 'transparentTheme'}
+            theme="transparentThemeDark"
             beforeMount={(monaco) => {
               monaco.editor.defineTheme('transparentTheme', {
                 base: 'vs',

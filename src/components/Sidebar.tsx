@@ -69,7 +69,7 @@ export function Sidebar({ isDarkMode, toggleDarkMode }: SidebarProps) {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#fcfcfc]/90 dark:bg-[#050505]/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-40 px-2 pb-safe shadow-lg">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#fcfcfc]/90 dark:bg-[#050505]/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-[calc(4rem+env(safe-area-inset-bottom))] z-40 px-2 pb-[env(safe-area-inset-bottom)] shadow-lg">
         <button className="p-3 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
           <Search size={24} strokeWidth={2.5} />
         </button>

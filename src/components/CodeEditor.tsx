@@ -78,14 +78,14 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
           ${(!isDraggingWidth && !isDraggingHeight) ? 'transition-all duration-300' : ''}
           ${isMaximized 
             ? 'fixed inset-0 md:inset-4 md:rounded-2xl' 
-            : 'fixed bottom-0 left-0 right-0 rounded-t-2xl md:relative md:rounded-2xl md:ml-2 md:w-[var(--editor-width)] md:self-end'
+            : 'fixed bottom-0 left-0 right-0 top-[env(safe-area-inset-top,2rem)] rounded-t-2xl md:top-auto md:relative md:rounded-2xl md:ml-2 md:w-[var(--editor-width)] md:self-end'
           }
           border border-gray-800 overflow-hidden
         `}
         style={{
           ...(!isMaximized ? { 
             '--editor-width': `${editorWidth}px`,
-            height: `${editorHeight}px`
+            height: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${editorHeight}px` : undefined
           } : {})
         } as React.CSSProperties}
       >

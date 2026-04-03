@@ -88,7 +88,7 @@ export default function RuixenMoonChat({ onStart }: { onStart?: (prompt: string)
       </div>
 
       {/* Input Box Section */}
-      <div className="w-full max-w-3xl mb-[20vh]">
+      <div className="w-full max-w-3xl mb-[10vh] md:mb-[20vh] px-4 md:px-0">
         <div className="relative bg-black/60 backdrop-blur-md rounded-xl border border-neutral-700">
           <Textarea
             ref={textareaRef}
@@ -140,15 +140,17 @@ export default function RuixenMoonChat({ onStart }: { onStart?: (prompt: string)
         </div>
 
         {/* Quick Actions */}
-        <div className="flex items-center justify-center flex-wrap gap-3 mt-6">
-          <QuickAction icon={<Code2 className="w-4 h-4" />} label="Generate Code" onClick={() => onStart?.("Generate Code")} />
-          <QuickAction icon={<Rocket className="w-4 h-4" />} label="Launch App" onClick={() => onStart?.("Launch App")} />
-          <QuickAction icon={<Layers className="w-4 h-4" />} label="UI Components" onClick={() => onStart?.("UI Components")} />
-          <QuickAction icon={<Palette className="w-4 h-4" />} label="Theme Ideas" onClick={() => onStart?.("Theme Ideas")} />
-          <QuickAction icon={<CircleUserRound className="w-4 h-4" />} label="User Dashboard" onClick={() => onStart?.("User Dashboard")} />
-          <QuickAction icon={<MonitorIcon className="w-4 h-4" />} label="Landing Page" onClick={() => onStart?.("Landing Page")} />
-          <QuickAction icon={<FileUp className="w-4 h-4" />} label="Upload Docs" onClick={() => onStart?.("Upload Docs")} />
-          <QuickAction icon={<ImageIcon className="w-4 h-4" />} label="Image Assets" onClick={() => onStart?.("Image Assets")} />
+        <div className="flex items-center justify-start md:justify-center overflow-x-auto no-scrollbar w-full pb-2 md:pb-0 md:flex-wrap gap-2 md:gap-3 mt-6 px-1 md:px-0">
+          <div className="flex items-center gap-2 md:gap-3 flex-nowrap md:flex-wrap w-max md:w-auto mx-auto">
+            <QuickAction icon={<Code2 className="w-4 h-4" />} label="Generate Code" onClick={() => onStart?.("Generate Code")} />
+            <QuickAction icon={<Rocket className="w-4 h-4" />} label="Launch App" onClick={() => onStart?.("Launch App")} />
+            <QuickAction icon={<Layers className="w-4 h-4" />} label="UI Components" onClick={() => onStart?.("UI Components")} />
+            <QuickAction icon={<Palette className="w-4 h-4" />} label="Theme Ideas" onClick={() => onStart?.("Theme Ideas")} />
+            <QuickAction icon={<CircleUserRound className="w-4 h-4" />} label="User Dashboard" onClick={() => onStart?.("User Dashboard")} />
+            <QuickAction icon={<MonitorIcon className="w-4 h-4" />} label="Landing Page" onClick={() => onStart?.("Landing Page")} />
+            <QuickAction icon={<FileUp className="w-4 h-4" />} label="Upload Docs" onClick={() => onStart?.("Upload Docs")} />
+            <QuickAction icon={<ImageIcon className="w-4 h-4" />} label="Image Assets" onClick={() => onStart?.("Image Assets")} />
+          </div>
         </div>
       </div>
     </div>

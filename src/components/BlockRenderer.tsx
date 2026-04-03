@@ -132,7 +132,7 @@ export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpe
             
           case 'complexity_table':
             return (
-              <div key={i} className="my-2 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl">
+              <div key={i} className="my-2 overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-xl">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                   <thead className="bg-gray-50/50 dark:bg-gray-800/50">
                     <tr>

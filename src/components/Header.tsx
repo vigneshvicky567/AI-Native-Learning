@@ -28,10 +28,10 @@ export function Header({ onOpenCheckpoints, onToggleEditor, isEditorOpen }: Head
         </button>
         <button 
           onClick={onOpenCheckpoints}
-          className="flex items-center gap-2 bg-gray-900 dark:bg-gray-800 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-sm hover:bg-gray-800 dark:hover:bg-gray-700 transition-all duration-200"
+          className="flex items-center justify-center sm:px-5 w-10 h-10 sm:w-auto sm:h-auto sm:py-2.5 bg-gray-900 dark:bg-gray-800 text-white rounded-full text-sm font-bold shadow-sm hover:bg-gray-800 dark:hover:bg-gray-700 transition-all duration-200"
         >
           <CheckSquare size={18} className="text-white/80" strokeWidth={2.5} />
-          <span className="hidden sm:inline">Checkpoints</span>
+          <span className="hidden sm:inline sm:ml-2">Checkpoints</span>
         </button>
       </div>
     </header>

@@ -44,7 +44,7 @@ export function ChecklistSidebar({ isOpen, onClose }: ChecklistSidebarProps) {
       )}
       
       {/* Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-80 bg-[#fcfcfc]/95 dark:bg-[#050505]/95 backdrop-blur-xl shadow-xl border-l border-gray-200 dark:border-gray-800 z-50 transform transition-transform duration-300 ease-in-out font-sans ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-full max-w-sm bg-[#fcfcfc]/95 dark:bg-[#050505]/95 backdrop-blur-xl shadow-xl border-l border-gray-200 dark:border-gray-800 z-50 transform transition-transform duration-300 ease-in-out font-sans ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-6 h-full flex flex-col bg-transparent">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Checkpoints</h2>

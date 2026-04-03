@@ -56,10 +56,19 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editorCode, setEditorCode] = useState('');
   const [editorLanguage, setEditorLanguage] = useState('python');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      const scrollContainer = scrollContainerRef.current;
+      // Use requestAnimationFrame to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      });
+    }
   }, [messages]);
 
   const handleOpenEditor = (code: string, language: string) => {
@@ -91,22 +100,25 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
     >
       <Sidebar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       
-      <main className="flex-1 relative flex flex-col md:ml-2 pb-16 md:pb-0 z-10">
-        <div className="flex-1 relative overflow-hidden flex flex-col bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] border-0 md:border border-white/80 dark:border-[#1a1a1a] shadow-2xl">
+      <main className="flex-1 relative flex flex-col min-h-0 md:ml-2 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 z-10">
+        <div className="flex-1 relative overflow-hidden min-h-0 flex flex-col bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] border-0 md:border border-white/80 dark:border-[#1a1a1a] shadow-2xl">
           {/* Background Gradients */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 dark:hidden">
             <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-gradient-to-br from-blue-200/60 to-purple-300/60 rounded-full mix-blend-multiply filter blur-[120px]"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-tl from-indigo-300/60 to-blue-200/60 rounded-full mix-blend-multiply filter blur-[120px]"></div>
           </div>
 
-          <div className="flex-1 overflow-y-auto relative z-10 flex flex-col px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex-1 overflow-hidden min-h-0 relative z-10 flex flex-col px-4 sm:px-6 lg:px-8 py-6">
           <Header 
             onOpenCheckpoints={() => setIsChecklistOpen(true)} 
             onToggleEditor={() => setIsEditorOpen(!isEditorOpen)}
             isEditorOpen={isEditorOpen}
           />
           
-          <div className="flex-1 flex flex-col mt-2 mb-6 max-w-4xl mx-auto w-full overflow-y-auto no-scrollbar">
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 flex flex-col mt-2 mb-6 max-w-4xl mx-auto w-full overflow-y-auto no-scrollbar min-h-0"
+          >
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center">
                 <Greeting />
@@ -198,12 +210,11 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
           
-          <div className="mt-auto max-w-3xl mx-auto w-full pb-2">
+          <div className="mt-auto max-w-3xl mx-auto w-full pb-2 px-2 md:px-0">
             <InputArea onSubmit={onSendMessage} isLoading={isLoading} />
           </div>
         </div>

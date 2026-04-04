@@ -8,7 +8,7 @@ import { ChecklistSidebar } from './ChecklistSidebar';
 import { CodeEditor } from './CodeEditor';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { BlockRenderer, Block } from './BlockRenderer';
+import { TutorView } from './TutorView';
 import { CodeBlock } from './CodeBlock';
 import { LoadingBreadcrumb } from './ui/animated-loading-svg-text-shimmer';
 
@@ -16,6 +16,7 @@ export interface Message {
   role: 'user' | 'model';
   text: string;
   files?: { name: string; type: string; url: string }[];
+  tutorData?: any;
 }
 
 interface ChatViewProps {
@@ -26,45 +27,12 @@ interface ChatViewProps {
   toggleDarkMode: () => void;
 }
 
-function tryParseBlocks(buffer: string): Block[] | null {
-  let cleaned = buffer.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
-  
-  // Try parsing the whole thing first
-  try {
-    const parsed = JSON.parse(cleaned);
-    if (Array.isArray(parsed)) return parsed;
-  } catch (e) {
-    // ignore
-  }
-
-  // If it doesn't start with [, it might be raw text
-  if (!cleaned.startsWith('[')) {
-    return null;
-  }
-
-  // It's a partial JSON array. Let's try to extract as many complete objects as possible.
-  // A simple way is to find the last `}` and try to parse. If it fails, find the previous `}` and try again.
-  let lastBrace = cleaned.lastIndexOf('}');
-  while (lastBrace !== -1) {
-    try {
-      const partial = cleaned.substring(0, lastBrace + 1) + ']';
-      const parsed = JSON.parse(partial);
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e) {
-      // ignore and try the previous brace
-    }
-    lastBrace = cleaned.lastIndexOf('}', lastBrace - 1);
-  }
-
-  // If we couldn't parse any objects, but it started with '[', return empty array to avoid flashing raw text
-  return [];
-}
-
 export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggleDarkMode }: ChatViewProps) {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editorCode, setEditorCode] = useState('');
   const [editorLanguage, setEditorLanguage] = useState('python');
+  const [editorActiveLine, setEditorActiveLine] = useState<number | undefined>(undefined);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,21 +104,24 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
             ) : (
               <div className="flex flex-col gap-6 py-4">
                 {messages.map((msg, idx) => {
-                  let parsedBlocks: Block[] | null = null;
-                  if (msg.role === 'model') {
-                    parsedBlocks = tryParseBlocks(msg.text);
-                  }
-
                   if (msg.role === 'model' && msg.text === '') {
                     return null;
                   }
 
                   return (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] py-4 ${msg.role === 'user' ? 'bg-gray-100/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 rounded-3xl px-6' : 'bg-transparent text-gray-900 dark:text-gray-100 px-2'}`}>
+                      <div className={`max-w-[85%] py-4 ${msg.role === 'user' ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-900 dark:text-indigo-100 rounded-3xl px-6 shadow-sm border border-indigo-100 dark:border-indigo-500/20' : 'bg-transparent text-gray-900 dark:text-gray-100 px-2'}`}>
                         {msg.role === 'model' ? (
-                          parsedBlocks ? (
-                            <BlockRenderer blocks={parsedBlocks} onOpenEditor={handleOpenEditor} />
+                          msg.tutorData ? (
+                            <TutorView 
+                              data={msg.tutorData} 
+                              onCodeUpdate={(code, language, activeLine) => {
+                                setEditorCode(code);
+                                setEditorLanguage(language);
+                                setEditorActiveLine(activeLine);
+                                setIsEditorOpen(true);
+                              }}
+                            />
                           ) : (
                             <div className="markdown-body prose prose-sm max-w-none font-sans text-gray-900 dark:text-gray-100">
                               <ReactMarkdown
@@ -238,6 +209,7 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
         onRunCode={handleRunCode}
         isLoading={isLoading}
         isDarkMode={isDarkMode}
+        activeLine={editorActiveLine}
       />
       <ChecklistSidebar isOpen={isChecklistOpen} onClose={() => setIsChecklistOpen(false)} />
     </div>

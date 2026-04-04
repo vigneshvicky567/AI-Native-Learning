@@ -6,9 +6,10 @@ import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 interface CodeBlockProps {
   language: string;
   code: string;
+  activeLines?: number[];
 }
 
-export function CodeBlock({ language, code }: CodeBlockProps) {
+export function CodeBlock({ language, code, activeLines }: CodeBlockProps) {
   const [isCopied, setIsCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
 
@@ -24,9 +25,9 @@ export function CodeBlock({ language, code }: CodeBlockProps) {
   };
 
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-800 shadow-sm my-3 bg-[#282C34]">
+    <div className="rounded-xl overflow-hidden border border-gray-800 shadow-sm bg-[#282C34] flex flex-col h-full max-h-full">
       <div 
-        className="flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-[#21252B] cursor-pointer select-none"
+        className="flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-[#21252B] cursor-pointer select-none shrink-0"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2 text-gray-400 text-xs font-mono">
@@ -53,13 +54,24 @@ export function CodeBlock({ language, code }: CodeBlockProps) {
         </button>
       </div>
       {isOpen && (
-        <SyntaxHighlighter
-          style={oneDark}
-          language={language || 'text'}
-          customStyle={{ margin: 0, borderRadius: 0, fontSize: '13px', padding: '16px', background: 'transparent' }}
-        >
-          {code}
-        </SyntaxHighlighter>
+        <div className="overflow-auto flex-1">
+          <SyntaxHighlighter
+            style={oneDark}
+            language={language || 'text'}
+            customStyle={{ margin: 0, borderRadius: 0, fontSize: '13px', padding: '16px', background: 'transparent' }}
+            wrapLines={true}
+            lineProps={(lineNumber) => {
+              const style: React.CSSProperties = { display: 'block', paddingLeft: '8px', marginLeft: '-8px', borderLeft: '2px solid transparent' };
+              if (activeLines?.includes(lineNumber)) {
+                style.backgroundColor = 'rgba(99, 102, 241, 0.2)';
+                style.borderLeft = '2px solid #6366f1';
+              }
+              return { style };
+            }}
+          >
+            {code}
+          </SyntaxHighlighter>
+        </div>
       )}
     </div>
   );

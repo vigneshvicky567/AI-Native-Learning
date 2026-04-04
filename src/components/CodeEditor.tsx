@@ -10,15 +10,35 @@ interface CodeEditorProps {
   onRunCode?: (code: string, language: string) => void;
   isLoading?: boolean;
   isDarkMode?: boolean;
+  activeLine?: number;
 }
 
-export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'python', onRunCode, isLoading, isDarkMode = false }: CodeEditorProps) {
+export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'python', onRunCode, isLoading, isDarkMode = false, activeLine }: CodeEditorProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [code, setCode] = useState(initialCode);
-  const [editorWidth, setEditorWidth] = useState(typeof window !== 'undefined' ? Math.max(600, window.innerWidth * 0.4) : 600);
-  const [editorHeight, setEditorHeight] = useState(typeof window !== 'undefined' ? window.innerHeight - 24 : 800);
+  const [editorWidth, setEditorWidth] = useState(typeof window !== 'undefined' ? Math.max(500, window.innerWidth * 0.4) : 500);
+  const [editorHeight, setEditorHeight] = useState(typeof window !== 'undefined' ? window.innerHeight - 32 : 800);
   const [isDraggingWidth, setIsDraggingWidth] = useState(false);
   const [isDraggingHeight, setIsDraggingHeight] = useState(false);
+  const editorRef = React.useRef<any>(null);
+  const decorationsRef = React.useRef<string[]>([]);
+
+  useEffect(() => {
+    if (editorRef.current && activeLine !== undefined) {
+      decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, [
+        {
+          range: new (window as any).monaco.Range(activeLine, 1, activeLine, 1),
+          options: {
+            isWholeLine: true,
+            className: 'bg-indigo-500/20 border-l-2 border-indigo-500',
+          }
+        }
+      ]);
+      editorRef.current.revealLineInCenter(activeLine);
+    } else if (editorRef.current) {
+      decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, []);
+    }
+  }, [activeLine]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -74,13 +94,14 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
 
       <div 
         className={`
-          flex flex-col shadow-2xl ease-in-out z-50 font-sans bg-[#050505]/95 backdrop-blur-xl
+          flex flex-col shadow-2xl ease-in-out z-50 font-sans backdrop-blur-xl
+          ${isDarkMode ? 'bg-[#050505]/95 border-gray-800' : 'bg-white/95 border-gray-200'}
           ${(!isDraggingWidth && !isDraggingHeight) ? 'transition-all duration-300' : ''}
           ${isMaximized 
             ? 'fixed inset-0 md:inset-4 md:rounded-2xl' 
             : 'fixed bottom-0 left-0 right-0 top-[env(safe-area-inset-top,2rem)] rounded-t-2xl md:top-auto md:relative md:rounded-2xl md:ml-2 md:w-[var(--editor-width)] md:self-end'
           }
-          border border-gray-800 overflow-hidden
+          border overflow-hidden
         `}
         style={{
           ...(!isMaximized ? { 
@@ -92,14 +113,14 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
         {!isMaximized && (
           <>
             <div
-              className="hidden md:block absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-500/50 z-50 transition-colors"
+              className="hidden md:block absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-indigo-500/50 z-50 transition-colors"
               onMouseDown={(e) => {
                 e.preventDefault();
                 setIsDraggingWidth(true);
               }}
             />
             <div
-              className="absolute top-0 left-0 right-0 h-2 cursor-row-resize hover:bg-blue-500/50 z-50 transition-colors"
+              className="absolute top-0 left-0 right-0 h-2 cursor-row-resize hover:bg-indigo-500/50 z-50 transition-colors"
               onMouseDown={(e) => {
                 e.preventDefault();
                 setIsDraggingHeight(true);
@@ -108,14 +129,14 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
           </>
         )}
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-transparent border-b border-gray-800 cursor-default select-none">
+        <div className={`flex items-center justify-between px-5 py-4 bg-transparent border-b cursor-default select-none ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
           <div className="flex items-center gap-4">
             <div className="flex gap-2">
               <div className="w-3.5 h-3.5 rounded-full bg-[#FF5F56]"></div>
               <div className="w-3.5 h-3.5 rounded-full bg-[#FFBD2E]"></div>
               <div className="w-3.5 h-3.5 rounded-full bg-[#27C93F]"></div>
             </div>
-            <div className="flex items-center gap-2 text-[13px] text-gray-300 font-bold bg-gray-800 px-3 py-1.5 rounded-md border border-gray-700 shadow-sm">
+            <div className={`flex items-center gap-2 text-[13px] font-bold px-3 py-1.5 rounded-md border shadow-sm ${isDarkMode ? 'text-gray-300 bg-gray-800 border-gray-700' : 'text-gray-700 bg-gray-100 border-gray-200'}`}>
               <Terminal size={14} />
               <span>main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : language === 'typescript' ? 'ts' : language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : 'txt'}</span>
             </div>
@@ -125,7 +146,7 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
               <button 
                 onClick={handleRun}
                 disabled={isLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:text-white/70 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:text-white/70 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
               >
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
                 {isLoading ? 'Running...' : 'Run Code'}
@@ -133,14 +154,14 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
             )}
             <button 
               onClick={() => setIsMaximized(!isMaximized)} 
-              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-100 bg-transparent rounded-md border border-gray-700 hover:bg-gray-800 transition-all duration-200"
+              className={`w-8 h-8 flex items-center justify-center bg-transparent rounded-md border transition-all duration-200 ${isDarkMode ? 'text-gray-400 hover:text-gray-100 border-gray-700 hover:bg-gray-800' : 'text-gray-500 hover:text-gray-900 border-gray-200 hover:bg-gray-100'}`}
               title={isMaximized ? "Minimize" : "Maximize"}
             >
               {isMaximized ? <Minimize2 size={14} strokeWidth={2.5} /> : <Maximize2 size={14} strokeWidth={2.5} />}
             </button>
             <button 
               onClick={onClose} 
-              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-100 bg-transparent rounded-md border border-gray-700 hover:bg-gray-800 transition-all duration-200"
+              className={`w-8 h-8 flex items-center justify-center bg-transparent rounded-md border transition-all duration-200 ${isDarkMode ? 'text-gray-400 hover:text-gray-100 border-gray-700 hover:bg-gray-800' : 'text-gray-500 hover:text-gray-900 border-gray-200 hover:bg-gray-100'}`}
               title="Close Editor"
             >
               <X size={16} strokeWidth={2.5} />
@@ -153,9 +174,12 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
           <Editor
             height="100%"
             language={language}
-            theme="transparentThemeDark"
+            theme={isDarkMode ? "transparentThemeDark" : "transparentThemeLight"}
+            onMount={(editor) => {
+              editorRef.current = editor;
+            }}
             beforeMount={(monaco) => {
-              monaco.editor.defineTheme('transparentTheme', {
+              monaco.editor.defineTheme('transparentThemeLight', {
                 base: 'vs',
                 inherit: true,
                 rules: [],

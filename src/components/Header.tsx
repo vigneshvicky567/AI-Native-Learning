@@ -21,7 +21,7 @@ export function Header({ onOpenCheckpoints, onToggleEditor, isEditorOpen }: Head
       <div className="flex items-center gap-3">
         <button 
           onClick={onToggleEditor}
-          className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 border hover:bg-gray-100 dark:hover:bg-gray-800 ${isEditorOpen ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
+          className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 border hover:bg-gray-100 dark:hover:bg-gray-800 ${isEditorOpen ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700' : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
           title="Toggle Code Editor"
         >
           <Code2 size={20} strokeWidth={2.5} />

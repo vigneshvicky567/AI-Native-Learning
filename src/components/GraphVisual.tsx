@@ -220,7 +220,7 @@ interface GraphVisualProps {
   direction?: 'TB' | 'LR' | 'BT' | 'RL';
 }
 
-function GraphVisualInner({ title, nodes: initialNodes, edges: initialEdges, direction = 'TB' }: GraphVisualProps) {
+function GraphVisualInner({ title, nodes: initialNodes = [], edges: initialEdges = [], direction = 'TB' }: GraphVisualProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
@@ -262,8 +262,8 @@ function GraphVisualInner({ title, nodes: initialNodes, edges: initialEdges, dir
           color: '#6366f1',
         },
         style: { stroke: '#6366f1', strokeWidth: 2 },
-        labelStyle: { fill: '#e2e8f0', fontWeight: 600, fontSize: 11 },
-        labelBgStyle: { fill: '#1e293b', fillOpacity: 0.85, rx: 4, ry: 4 },
+        labelStyle: { fill: 'currentColor', fontWeight: 600, fontSize: 11 },
+        labelBgStyle: { fill: 'var(--bg-color, #1e293b)', fillOpacity: 0.85, rx: 4, ry: 4 },
         labelBgPadding: [6, 4] as [number, number],
       }))
       .filter((e) => validIds.has(e.source) && validIds.has(e.target));
@@ -276,8 +276,13 @@ function GraphVisualInner({ title, nodes: initialNodes, edges: initialEdges, dir
     return { nodes: formattedNodes, edges: formattedEdges };
   }, [initialNodes, initialEdges, direction]);
 
-  const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
-  const [edges, , onEdgesChange] = useEdgesState(layoutedEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+
+  useEffect(() => {
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+  }, [layoutedNodes, layoutedEdges, setNodes, setEdges]);
 
   // Re-fit when fullscreen toggles
   useEffect(() => {
@@ -285,42 +290,42 @@ function GraphVisualInner({ title, nodes: initialNodes, edges: initialEdges, dir
   }, [isFullscreen, fitView]);
 
   const containerClasses = isFullscreen
-    ? 'fixed inset-0 z-50 bg-[#0a0f1e] flex flex-col'
-    : 'my-3 border border-gray-800 rounded-xl overflow-hidden bg-[#0a0f1e] flex flex-col';
+    ? 'fixed inset-0 z-50 bg-white dark:bg-[#0a0f1e] flex flex-col'
+    : 'w-full h-full flex flex-col';
 
   return (
     <div className={containerClasses}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-white/5 backdrop-blur-sm">
-        <h4 className="text-sm font-semibold text-slate-200 tracking-wide">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <h4 className="text-sm font-semibold text-gray-900 dark:text-slate-200 tracking-wide">
           {title || 'Graph'}
         </h4>
         <div className="flex items-center gap-1">
           <button
             onClick={() => zoomIn({ duration: 200 })}
-            className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors"
+            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
             title="Zoom In"
           >
             <ZoomIn size={14} />
           </button>
           <button
             onClick={() => zoomOut({ duration: 200 })}
-            className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors"
+            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
             title="Zoom Out"
           >
             <ZoomOut size={14} />
           </button>
           <button
             onClick={() => fitView({ padding: 0.15, duration: 400 })}
-            className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors"
+            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
             title="Fit View"
           >
             <LocateFixed size={14} />
           </button>
-          <div className="w-px h-4 bg-white/10 mx-1" />
+          <div className="w-px h-4 bg-gray-300 dark:bg-slate-700 mx-1" />
           <button
             onClick={() => setIsFullscreen((f) => !f)}
-            className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors"
+            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
@@ -329,7 +334,7 @@ function GraphVisualInner({ title, nodes: initialNodes, edges: initialEdges, dir
       </div>
 
       {/* Canvas */}
-      <div className={isFullscreen ? 'flex-1 w-full' : 'h-[420px] w-full'}>
+      <div className="flex-1 w-full relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -349,26 +354,9 @@ function GraphVisualInner({ title, nodes: initialNodes, edges: initialEdges, dir
         >
           <Background
             variant={BackgroundVariant.Dots}
-            color="rgba(255,255,255,0.06)"
+            color="rgba(156, 163, 175, 0.3)"
             gap={20}
             size={1.5}
-          />
-          <Controls
-            showInteractive={false}
-            style={{
-              background: 'rgba(15,23,42,0.9)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 8,
-            }}
-          />
-          <MiniMap
-            nodeColor={(n) => n.data?.color || '#4f46e5'}
-            maskColor="rgba(10,15,30,0.7)"
-            style={{
-              background: 'rgba(15,23,42,0.9)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 8,
-            }}
           />
         </ReactFlow>
       </div>

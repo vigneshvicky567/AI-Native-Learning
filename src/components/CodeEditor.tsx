@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
-import { X, Minimize2, Maximize2, Terminal, Play, Loader2 } from 'lucide-react';
+import { X, Minimize2, Maximize2, Terminal, Play, Loader2, Wand2 } from 'lucide-react';
+import { useAiErrorFix } from '../hooks/useAiErrorFix';
 
 interface CodeEditorProps {
   isOpen: boolean;
@@ -8,35 +9,62 @@ interface CodeEditorProps {
   initialCode?: string;
   language?: string;
   onRunCode?: (code: string, language: string) => void;
+  onChangeCode?: (code: string) => void;
   isLoading?: boolean;
   isDarkMode?: boolean;
   activeLine?: number;
+  editorRef?: React.MutableRefObject<any>;
+  monacoRef?: React.MutableRefObject<any>;
 }
 
-export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'python', onRunCode, isLoading, isDarkMode = false, activeLine }: CodeEditorProps) {
+export function CodeEditor({
+  isOpen, onClose, initialCode = '', language = 'python',
+  onRunCode, onChangeCode, isLoading, isDarkMode = false, activeLine,
+  editorRef: externalEditorRef, monacoRef: externalMonacoRef
+}: CodeEditorProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [code, setCode] = useState(initialCode);
-  const [editorWidth, setEditorWidth] = useState(typeof window !== 'undefined' ? Math.max(500, window.innerWidth * 0.4) : 500);
-  const [editorHeight, setEditorHeight] = useState(typeof window !== 'undefined' ? window.innerHeight - 32 : 800);
+  const [editorWidth, setEditorWidth] = useState(500);
+  const [editorHeight, setEditorHeight] = useState(800);
   const [isDraggingWidth, setIsDraggingWidth] = useState(false);
   const [isDraggingHeight, setIsDraggingHeight] = useState(false);
-  const editorRef = React.useRef<any>(null);
-  const decorationsRef = React.useRef<string[]>([]);
+  const [errorCount, setErrorCount] = useState(0);
+
+  const internalEditorRef = useRef<any>(null);
+  const internalMonacoRef = useRef<any>(null);
+  const editorRef = externalEditorRef || internalEditorRef;
+  const monacoRef = externalMonacoRef || internalMonacoRef;
+  
+  const decorationsRef = useRef<string[]>([]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const codeActionRef = useRef<any>(null);
+
+  const { fixError } = useAiErrorFix(editorRef, monacoRef, language, setCode);
 
   useEffect(() => {
-    if (editorRef.current && activeLine !== undefined) {
-      decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, [
-        {
-          range: new (window as any).monaco.Range(activeLine, 1, activeLine, 1),
-          options: {
-            isWholeLine: true,
-            className: 'bg-indigo-500/20 border-l-2 border-indigo-500',
-          }
+    if (typeof window !== 'undefined') {
+      setEditorWidth(Math.max(500, window.innerWidth * 0.4));
+      setEditorHeight(window.innerHeight - 32);
+    }
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco) return;
+
+    if (activeLine !== undefined) {
+      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [{
+        range: new monaco.Range(activeLine, 1, activeLine, 1),
+        options: {
+          isWholeLine: true,
+          className: 'monaco-active-line',
+          linesDecorationsClassName: 'monaco-active-line-gutter'
         }
-      ]);
-      editorRef.current.revealLineInCenter(activeLine);
-    } else if (editorRef.current) {
-      decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, []);
+      }]);
+      editor.revealLineInCenter(activeLine);
+    } else {
+      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
     }
   }, [activeLine]);
 
@@ -68,20 +96,161 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = '';
     };
   }, [isDraggingWidth, isDraggingHeight]);
 
-  useEffect(() => {
-    setCode(initialCode);
-  }, [initialCode]);
+  // Sync initialCode prop
+  useEffect(() => { setCode(initialCode); }, [initialCode]);
+
+  // Run lint / syntax check after each edit (debounced)
+  const runDiagnostics = useCallback((currentCode: string, currentLanguage: string) => {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    // For JS/TS Monaco provides built-in diagnostics automatically.
+    // For Python we do a lightweight heuristic check here.
+    // In production, wire up a real language server (Pyright, Pylsp).
+    const markers: any[] = [];
+
+    if (currentLanguage === 'python') {
+      const lines = currentCode.split('\n');
+      lines.forEach((line, i) => {
+        // Detect common Python mistakes heuristically
+        const checks = [
+          { pattern: /^\s*print\s+[^(]/, message: 'SyntaxError: Missing parentheses in call to print' },
+          { pattern: /=={1}(?!=)\s*(True|False|None)/, message: 'Hint: Use "is" instead of "==" for True/False/None comparisons' },
+          { pattern: /except\s*:/, message: 'Warning: Bare except clause — consider catching specific exceptions' },
+        ];
+        checks.forEach(({ pattern, message }) => {
+          if (pattern.test(line)) {
+            markers.push({
+              severity: monaco.MarkerSeverity.Error,
+              startLineNumber: i + 1,
+              endLineNumber: i + 1,
+              startColumn: 1,
+              endColumn: line.length + 1,
+              message,
+              source: 'AI Lint',
+            });
+          }
+        });
+      });
+    }
+
+    monaco.editor.setModelMarkers(model, 'ai-lint', markers);
+    setErrorCount(markers.filter((m: any) => m.severity === monaco.MarkerSeverity.Error).length);
+  }, []);
+
+  const handleCodeChange = useCallback((val: string) => {
+    setCode(val);
+    if (onChangeCode) {
+      onChangeCode(val);
+    }
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      runDiagnostics(val, language);
+    }, 800);
+  }, [language, runDiagnostics, onChangeCode]);
+
+  // Register the "Fix with AI" code action (lightbulb)
+  const registerCodeActions = useCallback(() => {
+    const monaco = monacoRef.current;
+    if (!monaco) return;
+
+    // Dispose previous registration to avoid duplicates
+    codeActionRef.current?.dispose();
+
+    codeActionRef.current = monaco.languages.registerCodeActionProvider('*', {
+      provideCodeActions(model: any, _range: any, context: any) {
+        if (!context.markers.length) return { actions: [], dispose: () => {} };
+
+        const actions = context.markers.map((marker: any) => ({
+          title: `Fix with AI: "${marker.message.slice(0, 50)}${marker.message.length > 50 ? '…' : ''}"`,
+          kind: 'quickfix',
+          isPreferred: true,
+          diagnostics: [marker],
+          command: {
+            id: 'ai.fix.error',
+            title: 'Fix with AI',
+            arguments: [marker, model.getValue()],
+          },
+        }));
+
+        return { actions, dispose: () => {} };
+      }
+    });
+
+    // Register the command that the action triggers
+    monaco.editor.addCommand({
+      id: 'ai.fix.error',
+      run: (_ctx: any, marker: any, fullCode: string) => {
+        fixError(marker, fullCode);
+      }
+    });
+  }, [fixError]);
+
+  const handleEditorMount = useCallback((editor: any, monaco: any) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+
+    // Define transparent themes
+    monaco.editor.defineTheme('transparentThemeLight', {
+      base: 'vs', inherit: true, rules: [],
+      colors: {
+        'editor.background': '#00000000',
+        'editor.lineHighlightBackground': '#00000000',
+        'editorLineNumber.background': '#00000000',
+        'editorGutter.background': '#00000000',
+      }
+    });
+    monaco.editor.defineTheme('transparentThemeDark', {
+      base: 'vs-dark', inherit: true, rules: [],
+      colors: {
+        'editor.background': '#00000000',
+        'editor.lineHighlightBackground': '#00000000',
+        'editorLineNumber.background': '#00000000',
+        'editorGutter.background': '#00000000',
+      }
+    });
+
+    // CSS for the AI-fixing line animation
+    const style = document.createElement('style');
+    style.textContent = `
+      .ai-fixing-line {
+        background: rgba(99, 102, 241, 0.08) !important;
+        animation: ai-pulse 1s ease-in-out infinite;
+      }
+      @keyframes ai-pulse {
+        0%, 100% { background: rgba(99, 102, 241, 0.08) !important; }
+        50%       { background: rgba(99, 102, 241, 0.18) !important; }
+      }
+      .ai-fixing-glyph::before {
+        content: '✦';
+        color: #6366f1;
+        font-size: 12px;
+        animation: ai-spin 1s linear infinite;
+        display: inline-block;
+      }
+      @keyframes ai-spin { to { transform: rotate(360deg); } }
+    `;
+    document.head.appendChild(style);
+
+    registerCodeActions();
+
+    // Run initial diagnostics if code is pre-populated
+    if (initialCode) runDiagnostics(initialCode, language);
+  }, [registerCodeActions, runDiagnostics, initialCode, language]);
 
   if (!isOpen) return null;
 
-  const handleRun = () => {
-    if (onRunCode) {
-      onRunCode(code, language);
-    }
+  const fileExtMap: Record<string, string> = {
+    python: 'py', javascript: 'js', typescript: 'ts',
+    cpp: 'cpp', java: 'java', rust: 'rs', go: 'go',
+    c: 'c', html: 'html',
   };
 
   return (
@@ -138,13 +307,21 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
             </div>
             <div className={`flex items-center gap-2 text-[13px] font-bold px-3 py-1.5 rounded-md border shadow-sm ${isDarkMode ? 'text-gray-300 bg-gray-800 border-gray-700' : 'text-gray-700 bg-gray-100 border-gray-200'}`}>
               <Terminal size={14} />
-              <span>main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : language === 'typescript' ? 'ts' : language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : 'txt'}</span>
+              <span>main.{fileExtMap[language] ?? 'txt'}</span>
             </div>
+
+            {/* Error badge */}
+            {errorCount > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 text-red-500 text-xs font-semibold rounded-md border border-red-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                {errorCount} error{errorCount > 1 ? 's' : ''} — click lightbulb to fix
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {onRunCode && (
               <button 
-                onClick={handleRun}
+                onClick={() => onRunCode(code, language)}
                 disabled={isLoading}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:text-white/70 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
               >
@@ -175,35 +352,9 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
             height="100%"
             language={language}
             theme={isDarkMode ? "transparentThemeDark" : "transparentThemeLight"}
-            onMount={(editor) => {
-              editorRef.current = editor;
-            }}
-            beforeMount={(monaco) => {
-              monaco.editor.defineTheme('transparentThemeLight', {
-                base: 'vs',
-                inherit: true,
-                rules: [],
-                colors: {
-                  'editor.background': '#00000000',
-                  'editor.lineHighlightBackground': '#00000000',
-                  'editorLineNumber.background': '#00000000',
-                  'editorGutter.background': '#00000000',
-                }
-              });
-              monaco.editor.defineTheme('transparentThemeDark', {
-                base: 'vs-dark',
-                inherit: true,
-                rules: [],
-                colors: {
-                  'editor.background': '#00000000',
-                  'editor.lineHighlightBackground': '#00000000',
-                  'editorLineNumber.background': '#00000000',
-                  'editorGutter.background': '#00000000',
-                }
-              });
-            }}
+            onMount={handleEditorMount}
             value={code}
-            onChange={(val) => setCode(val || '')}
+            onChange={(val) => handleCodeChange(val || '')}
             options={{
               minimap: { enabled: false },
               fontSize: 13,
@@ -214,6 +365,9 @@ export function CodeEditor({ isOpen, onClose, initialCode = '', language = 'pyth
               smoothScrolling: true,
               cursorBlinking: "smooth",
               lineNumbersMinChars: 3,
+              lightbulb: { enabled: true },    // show the lightbulb icon
+              quickSuggestions: true,
+              glyphMargin: true,               // needed for glyph decorations
             }}
             loading={
               <div className="flex items-center justify-center h-full text-gray-500 text-sm">

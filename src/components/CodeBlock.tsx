@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Check, Copy, Code2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface CodeBlockProps {
   language: string;
@@ -12,6 +12,8 @@ interface CodeBlockProps {
 export function CodeBlock({ language, code, activeLines }: CodeBlockProps) {
   const [isCopied, setIsCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+
+  const activeSet = useMemo(() => new Set(activeLines ?? []), [activeLines]);
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -61,10 +63,10 @@ export function CodeBlock({ language, code, activeLines }: CodeBlockProps) {
             customStyle={{ margin: 0, borderRadius: 0, fontSize: '13px', padding: '16px', background: 'transparent' }}
             wrapLines={true}
             lineProps={(lineNumber) => {
-              const style: React.CSSProperties = { display: 'block', paddingLeft: '8px', marginLeft: '-8px', borderLeft: '2px solid transparent' };
-              if (activeLines?.includes(lineNumber)) {
-                style.backgroundColor = 'rgba(99, 102, 241, 0.2)';
-                style.borderLeft = '2px solid #6366f1';
+              const style: React.CSSProperties = { display: 'block', paddingLeft: '8px', marginLeft: '-8px', borderLeft: '2px solid transparent', width: '100%' };
+              if (activeSet.has(lineNumber)) {
+                style.backgroundColor = 'rgba(129, 140, 248, 0.25)'; // Brighter indigo for dark mode
+                style.borderLeft = '2px solid #818cf8';
               }
               return { style };
             }}

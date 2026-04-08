@@ -218,12 +218,26 @@ interface GraphVisualProps {
   nodes: any[];
   edges: any[];
   direction?: 'TB' | 'LR' | 'BT' | 'RL';
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
-function GraphVisualInner({ title, nodes: initialNodes = [], edges: initialEdges = [], direction = 'TB' }: GraphVisualProps) {
-  const [isFullscreen, setIsFullscreen] = useState(false);
+function GraphVisualInner({ title, nodes: initialNodes = [], edges: initialEdges = [], direction = 'TB', isFullscreen, onToggleFullscreen }: GraphVisualProps) {
+  const [localIsFullscreen, setLocalIsFullscreen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
+
+  const isFullscreenActive = isFullscreen !== undefined ? isFullscreen : localIsFullscreen;
+  const toggleFullscreen = onToggleFullscreen || (() => setLocalIsFullscreen(!localIsFullscreen));
+
+  // Handle Fullscreen Toggle
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreenActive) toggleFullscreen();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isFullscreenActive, toggleFullscreen]);
 
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {
     // 1. Map incoming nodes → ReactFlow nodes with correct type
@@ -239,7 +253,7 @@ function GraphVisualInner({ title, nodes: initialNodes = [], edges: initialEdges
           color: n.color,
           _shape: shape,       // stored for dagre dimension lookup
         },
-        position: n.position || { x: 0, y: 0 },
+        position: (n.x !== undefined && n.y !== undefined) ? { x: n.x, y: n.y } : (n.position || { x: 0, y: 0 }),
       };
     });
 
@@ -269,7 +283,10 @@ function GraphVisualInner({ title, nodes: initialNodes = [], edges: initialEdges
       .filter((e) => validIds.has(e.source) && validIds.has(e.target));
 
     // 3. Run dagre only when positions are absent
-    const needsLayout = formattedNodes.every((n) => !initialNodes.find((o) => String(o.id) === n.id)?.position);
+    const needsLayout = formattedNodes.every((n) => {
+      const orig = initialNodes.find((o) => String(o.id) === n.id);
+      return !orig?.position && (orig?.x === undefined || orig?.y === undefined);
+    });
     if (needsLayout) {
       return getLayoutedElements(formattedNodes, formattedEdges, direction);
     }
@@ -282,14 +299,15 @@ function GraphVisualInner({ title, nodes: initialNodes = [], edges: initialEdges
   useEffect(() => {
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
-  }, [layoutedNodes, layoutedEdges, setNodes, setEdges]);
+    setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 50);
+  }, [layoutedNodes, layoutedEdges, setNodes, setEdges, fitView]);
 
   // Re-fit when fullscreen toggles
   useEffect(() => {
     setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 50);
-  }, [isFullscreen, fitView]);
+  }, [isFullscreenActive, fitView]);
 
-  const containerClasses = isFullscreen
+  const containerClasses = isFullscreenActive && isFullscreen === undefined
     ? 'fixed inset-0 z-50 bg-white dark:bg-[#0a0f1e] flex flex-col'
     : 'w-full h-full flex flex-col';
 
@@ -324,11 +342,11 @@ function GraphVisualInner({ title, nodes: initialNodes = [], edges: initialEdges
           </button>
           <div className="w-px h-4 bg-gray-300 dark:bg-slate-700 mx-1" />
           <button
-            onClick={() => setIsFullscreen((f) => !f)}
+            onClick={toggleFullscreen}
             className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
-            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+            title={isFullscreenActive ? 'Exit Fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            {isFullscreenActive ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>
         </div>
       </div>

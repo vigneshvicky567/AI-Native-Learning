@@ -1,7 +1,7 @@
 import React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowUp, Paperclip, Square, X, StopCircle, Mic, Globe, BrainCog, FolderCode, FileText } from "lucide-react";
+import { ArrowUp, Paperclip, Square, X, StopCircle, Mic, Globe, BrainCog, FolderCode, FileText, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Utility function for className merging
@@ -450,27 +450,27 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
   const [filePreviews, setFilePreviews] = React.useState<{ [key: string]: string }>({});
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [isRecording, setIsRecording] = React.useState(false);
-  const [showSearch, setShowSearch] = React.useState(false);
+  const [showLearn, setShowLearn] = React.useState(false);
   const [showThink, setShowThink] = React.useState(false);
   const [showCanvas, setShowCanvas] = React.useState(false);
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
   const promptBoxRef = React.useRef<HTMLDivElement>(null);
 
   const handleToggleChange = (value: string) => {
-    if (value === "search") {
-      setShowSearch((prev) => !prev);
+    if (value === "learn") {
+      setShowLearn((prev) => !prev);
       setShowThink(false);
       setShowCanvas(false);
     } else if (value === "think") {
       setShowThink((prev) => !prev);
-      setShowSearch(false);
+      setShowLearn(false);
       setShowCanvas(false);
     }
   };
 
   const handleCanvasToggle = () => {
     setShowCanvas((prev) => !prev);
-    setShowSearch(false);
+    setShowLearn(false);
     setShowThink(false);
   };
 
@@ -541,7 +541,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
   const handleSubmit = () => {
     if (input.trim() || files.length > 0) {
       let messagePrefix = "";
-      if (showSearch) messagePrefix = "[Search: ";
+      if (showLearn) messagePrefix = "[Learn: ";
       else if (showThink) messagePrefix = "[Think: ";
       else if (showCanvas) messagePrefix = "[Canvas: ";
       const formattedInput = messagePrefix ? `${messagePrefix}${input}]` : input;
@@ -632,8 +632,8 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
         >
           <PromptInputTextarea
             placeholder={
-              showSearch
-                ? "Search the web..."
+              showLearn
+                ? "Learn a new topic..."
                 : showThink
                 ? "Think deeply..."
                 : showCanvas
@@ -684,25 +684,25 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
             <div className="flex items-center">
               <button
                 type="button"
-                onClick={() => handleToggleChange("search")}
+                onClick={() => handleToggleChange("learn")}
                 className={cn(
                   "rounded-full transition-all flex items-center gap-1 px-2 py-1 border h-8",
-                  showSearch
+                  showLearn
                     ? "bg-[#1EAEDB]/15 border-[#1EAEDB] text-[#1EAEDB]"
                     : "bg-transparent border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 )}
               >
                 <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
                   <motion.div
-                    animate={{ rotate: showSearch ? 360 : 0, scale: showSearch ? 1.1 : 1 }}
-                    whileHover={{ rotate: showSearch ? 360 : 15, scale: 1.1, transition: { type: "spring", stiffness: 300, damping: 10 } }}
+                    animate={{ rotate: showLearn ? 360 : 0, scale: showLearn ? 1.1 : 1 }}
+                    whileHover={{ rotate: showLearn ? 360 : 15, scale: 1.1, transition: { type: "spring", stiffness: 300, damping: 10 } }}
                     transition={{ type: "spring", stiffness: 260, damping: 25 }}
                   >
-                    <Globe className={cn("w-4 h-4", showSearch ? "text-[#1EAEDB]" : "text-inherit")} />
+                    <Lightbulb className={cn("w-4 h-4", showLearn ? "text-[#1EAEDB]" : "text-inherit")} />
                   </motion.div>
                 </div>
                 <AnimatePresence>
-                  {showSearch && (
+                  {showLearn && (
                     <motion.span
                       initial={{ width: 0, opacity: 0 }}
                       animate={{ width: "auto", opacity: 1 }}
@@ -710,7 +710,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                       transition={{ duration: 0.2 }}
                       className="text-xs overflow-hidden whitespace-nowrap text-[#1EAEDB] flex-shrink-0"
                     >
-                      Search
+                      Learn
                     </motion.span>
                   )}
                 </AnimatePresence>

@@ -19,15 +19,67 @@ export interface Message {
   tutorData?: any;
 }
 
+// ─── Parse Claude response into text + visual blocks ─────────────────────────
+function parseResponse(text: string) {
+  const parts = [];
+  const regex = /<visual>([\s\S]*?)<\/visual>/g;
+  let last = 0, match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) parts.push({ type: "text", content: text.slice(last, match.index) });
+    parts.push({ type: "visual", content: match[1].trim() });
+    last = regex.lastIndex;
+  }
+  if (last < text.length) parts.push({ type: "text", content: text.slice(last) });
+  return parts;
+}
+
+// ─── Sandboxed iframe renderer ────────────────────────────────────────────────
+function VisualFrame({ html }: { html: string }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const iframe = ref.current;
+    if (!iframe) return;
+
+    // Auto-resize to content height
+    const onLoad = () => {
+      try {
+        const h = iframe.contentDocument?.body?.scrollHeight;
+        if (h) iframe.style.height = h + "px";
+      } catch (_) {}
+    };
+    iframe.addEventListener("load", onLoad);
+    return () => iframe.removeEventListener("load", onLoad);
+  }, [html]);
+
+  return (
+    <iframe
+      ref={ref}
+      srcDoc={html}
+      sandbox="allow-scripts"          // no allow-same-origin = fully sandboxed
+      style={{
+        width: "100%",
+        border: "none",
+        borderRadius: 10,
+        minHeight: 300,
+        background: "transparent",
+      }}
+      title="visualization"
+    />
+  );
+}
+
 interface ChatViewProps {
   messages: Message[];
   onSendMessage: (text: string, files?: File[]) => void;
   isLoading: boolean;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  checkpoints: any[];
+  onToggleCheckpoint: (id: number) => void;
 }
 
-export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggleDarkMode }: ChatViewProps) {
+export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggleDarkMode, checkpoints, onToggleCheckpoint }: ChatViewProps) {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editorCode, setEditorCode] = useState('');
@@ -123,42 +175,50 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
                               }}
                             />
                           ) : (
-                            <div className="markdown-body prose prose-sm max-w-none font-sans text-gray-900 dark:text-gray-100">
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                  code({ node, inline, className, children, ...props }: any) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    const codeString = String(children).replace(/\n$/, '');
-                                    return !inline && match ? (
-                                      <CodeBlock language={match[1]} code={codeString} />
-                                    ) : (
-                                      <code {...props} className="bg-gray-50 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-gray-200 shadow-sm">
-                                        {children}
-                                      </code>
-                                    );
-                                  },
-                                  table: ({ children }) => (
-                                    <div className="overflow-x-auto my-4">
-                                      <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-                                        {children}
-                                      </table>
-                                    </div>
-                                  ),
-                                  th: ({ children }) => (
-                                    <th className="bg-gray-50 px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                                      {children}
-                                    </th>
-                                  ),
-                                  td: ({ children }) => (
-                                    <td className="px-4 py-3 text-sm text-gray-700 border-t border-gray-200">
-                                      {children}
-                                    </td>
-                                  ),
-                                }}
-                              >
-                                {msg.text}
-                              </ReactMarkdown>
+                            <div className="flex flex-col gap-4">
+                              {parseResponse(msg.text).map((part, i) => 
+                                part.type === "visual" ? (
+                                  <VisualFrame key={i} html={part.content} />
+                                ) : (
+                                  <div key={i} className="markdown-body prose prose-sm max-w-none font-sans text-gray-900 dark:text-gray-100">
+                                    <ReactMarkdown
+                                      remarkPlugins={[remarkGfm]}
+                                      components={{
+                                        code({ node, inline, className, children, ...props }: any) {
+                                          const match = /language-(\w+)/.exec(className || '');
+                                          const codeString = String(children).replace(/\n$/, '');
+                                          return !inline && match ? (
+                                            <CodeBlock language={match[1]} code={codeString} />
+                                          ) : (
+                                            <code {...props} className="bg-gray-50 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-[13px] font-bold border border-gray-200 shadow-sm">
+                                              {children}
+                                            </code>
+                                          );
+                                        },
+                                        table: ({ children }) => (
+                                          <div className="overflow-x-auto my-4">
+                                            <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                                              {children}
+                                            </table>
+                                          </div>
+                                        ),
+                                        th: ({ children }) => (
+                                          <th className="bg-gray-50 px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                                            {children}
+                                          </th>
+                                        ),
+                                        td: ({ children }) => (
+                                          <td className="px-4 py-3 text-sm text-gray-700 border-t border-gray-200">
+                                            {children}
+                                          </td>
+                                        ),
+                                      }}
+                                    >
+                                      {part.content}
+                                    </ReactMarkdown>
+                                  </div>
+                                )
+                              )}
                             </div>
                           )
                         ) : (
@@ -205,13 +265,19 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
         isOpen={isEditorOpen} 
         onClose={() => setIsEditorOpen(false)} 
         initialCode={editorCode}
+        onChangeCode={setEditorCode}
         language={editorLanguage}
         onRunCode={handleRunCode}
         isLoading={isLoading}
         isDarkMode={isDarkMode}
         activeLine={editorActiveLine}
       />
-      <ChecklistSidebar isOpen={isChecklistOpen} onClose={() => setIsChecklistOpen(false)} />
+      <ChecklistSidebar 
+        isOpen={isChecklistOpen} 
+        onClose={() => setIsChecklistOpen(false)} 
+        checkpoints={checkpoints}
+        onToggleCheckpoint={onToggleCheckpoint}
+      />
     </div>
   );
 }

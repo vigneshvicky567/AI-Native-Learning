@@ -2,6 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import './bones/registry';
 
 // Suppress benign ResizeObserver errors that occur with React Flow and Monaco
 const _ResizeObserver = window.ResizeObserver;

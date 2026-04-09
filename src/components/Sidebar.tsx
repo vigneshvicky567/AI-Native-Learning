@@ -5,9 +5,11 @@ interface SidebarProps {
   isDarkMode?: boolean;
   toggleDarkMode?: () => void;
   onNewChat?: () => void;
+  onViewHistory?: () => void;
+  onViewSettings?: () => void;
 }
 
-export function Sidebar({ isDarkMode, toggleDarkMode, onNewChat }: SidebarProps) {
+export function Sidebar({ isDarkMode, toggleDarkMode, onNewChat, onViewHistory, onViewSettings }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
@@ -43,7 +45,10 @@ export function Sidebar({ isDarkMode, toggleDarkMode, onNewChat }: SidebarProps)
           </button>
           
           {/* Chat History Button */}
-          <button className="h-12 w-12 group-hover:w-full shrink-0 rounded-full flex items-center justify-start px-[14px] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 overflow-hidden">
+          <button 
+            onClick={onViewHistory}
+            className="h-12 w-12 group-hover:w-full shrink-0 rounded-full flex items-center justify-start px-[14px] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 overflow-hidden"
+          >
             <History size={20} strokeWidth={2.5} className="shrink-0" />
             <span className="ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">History</span>
           </button>
@@ -65,7 +70,10 @@ export function Sidebar({ isDarkMode, toggleDarkMode, onNewChat }: SidebarProps)
           )}
           
           {/* Settings Button */}
-          <button className="h-12 w-12 group-hover:w-full shrink-0 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-start px-[14px] text-white dark:text-gray-900 shadow-sm hover:bg-gray-800 dark:hover:bg-white transition-all duration-200 overflow-hidden">
+          <button 
+            onClick={onViewSettings}
+            className="h-12 w-12 group-hover:w-full shrink-0 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-start px-[14px] text-white dark:text-gray-900 shadow-sm hover:bg-gray-800 dark:hover:bg-white transition-all duration-200 overflow-hidden"
+          >
             <Settings size={20} strokeWidth={2.5} className="shrink-0" />
             <span className="ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium">Settings</span>
           </button>

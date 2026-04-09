@@ -2,6 +2,9 @@ import React from 'react';
 import { Play, Sparkles, MessageSquare, Zap, Globe, BarChart3, CheckCircle2, ArrowRight, Moon, Sun } from 'lucide-react';
 
 import RuixenMoonChat from './ui/ruixen-moon-chat';
+import { Cards } from './Cards';
+import { Greeting } from './Greeting';
+import { Skeleton } from 'boneyard-js/react';
 
 interface LandingPageProps {
   onStart: (prompt: string) => void;
@@ -51,6 +54,18 @@ export function LandingPage({ onStart, isDarkMode, toggleDarkMode }: LandingPage
 
       {/* Hero Content */}
       <RuixenMoonChat onStart={onStart} />
+
+      {/* Quick Start Section */}
+      <section className="relative z-10 py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <Skeleton name="landing-greeting" loading={false}>
+            <Greeting />
+          </Skeleton>
+          <Skeleton name="landing-cards" loading={false}>
+            <Cards onSelect={onStart} />
+          </Skeleton>
+        </div>
+      </section>
 
       {/* Features Section */}
       <section id="features" className="relative z-10 py-16 md:py-24 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-t border-white/60 dark:border-gray-800/60">
@@ -164,12 +179,25 @@ export function LandingPage({ onStart, isDarkMode, toggleDarkMode }: LandingPage
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {['Computer Science', 'Mathematics', 'Languages', 'Sciences', 'History', 'Literature', 'Business', 'Arts'].map((topic, i) => (
-              <div key={i} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 sm:p-6 rounded-3xl shadow-clay-card border border-white/60 dark:border-gray-700/60 hover:-translate-y-1 hover:shadow-clay-surface transition-all duration-300 cursor-pointer text-center group">
+            {[
+              { name: 'Computer Science', prompt: 'I want to learn Computer Science. Let\'s start with an overview of the most important concepts.' },
+              { name: 'Mathematics', prompt: 'I want to master Mathematics. Can we start with some fundamental algebra or calculus?' },
+              { name: 'Languages', prompt: 'I want to learn a new language. How can AI help me practice conversation and grammar?' },
+              { name: 'Sciences', prompt: 'I want to explore the Sciences. Let\'s start with some basic physics or chemistry concepts.' },
+              { name: 'History', prompt: 'I want to learn about History. Can you give me an overview of a major historical event?' },
+              { name: 'Literature', prompt: 'I want to dive into Literature. Let\'s analyze some classic works or literary movements.' },
+              { name: 'Business', prompt: 'I want to learn about Business and Economics. Let\'s start with the basics of entrepreneurship.' },
+              { name: 'Arts', prompt: 'I want to explore the Arts. Can we talk about art history or different creative techniques?' }
+            ].map((topic, i) => (
+              <div 
+                key={i} 
+                onClick={() => onStart(topic.prompt)}
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 sm:p-6 rounded-3xl shadow-clay-card border border-white/60 dark:border-gray-700/60 hover:-translate-y-1 hover:shadow-clay-surface transition-all duration-300 cursor-pointer text-center group"
+              >
                 <div className="w-12 h-12 mx-auto bg-indigo-50 dark:bg-indigo-900/30 text-[#5B50FF] dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Sparkles size={24} />
                 </div>
-                <h3 className="font-bold text-[#1a1a2e] dark:text-white">{topic}</h3>
+                <h3 className="font-bold text-[#1a1a2e] dark:text-white">{topic.name}</h3>
               </div>
             ))}
           </div>

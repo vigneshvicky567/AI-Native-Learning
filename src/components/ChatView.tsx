@@ -8,9 +8,13 @@ import { ChecklistSidebar } from './ChecklistSidebar';
 import { CodeEditor } from './CodeEditor';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { TutorView } from './TutorView';
 import { CodeBlock } from './CodeBlock';
 import { LoadingBreadcrumb } from './ui/animated-loading-svg-text-shimmer';
+import { Skeleton } from 'boneyard-js/react';
 
 export interface Message {
   role: 'user' | 'model';
@@ -44,8 +48,14 @@ function VisualFrame({ html }: { html: string }) {
     // Auto-resize to content height
     const onLoad = () => {
       try {
-        const h = iframe.contentDocument?.body?.scrollHeight;
-        if (h) iframe.style.height = h + "px";
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (doc) {
+          // Set a small timeout to ensure content is fully rendered
+          setTimeout(() => {
+            const h = doc.body.scrollHeight;
+            if (h) iframe.style.height = (h + 20) + "px";
+          }, 100);
+        }
       } catch (_) {}
     };
     iframe.addEventListener("load", onLoad);
@@ -55,14 +65,28 @@ function VisualFrame({ html }: { html: string }) {
   return (
     <iframe
       ref={ref}
-      srcDoc={html}
+      srcDoc={`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; }
+            </style>
+          </head>
+          <body>
+            ${html}
+          </body>
+        </html>
+      `}
       sandbox="allow-scripts"          // no allow-same-origin = fully sandboxed
+      scrolling="no"
       style={{
         width: "100%",
         border: "none",
         borderRadius: 10,
         minHeight: 300,
         background: "transparent",
+        overflow: "hidden"
       }}
       title="visualization"
     />
@@ -79,9 +103,27 @@ interface ChatViewProps {
   toggleDarkMode: () => void;
   checkpoints: any[];
   onToggleCheckpoint: (id: number) => void;
+  appMode: 'deep-work' | 'crisis-mode' | 'quick-check';
+  onModeChange: (mode: 'deep-work' | 'crisis-mode' | 'quick-check') => void;
+  onViewHistory: () => void;
+  onViewSettings: () => void;
 }
 
-export function ChatView({ messages, onSendMessage, isLoading, onStopResponse, onNewChat, isDarkMode, toggleDarkMode, checkpoints, onToggleCheckpoint }: ChatViewProps) {
+export function ChatView({ 
+  messages, 
+  onSendMessage, 
+  isLoading, 
+  onStopResponse, 
+  onNewChat, 
+  isDarkMode, 
+  toggleDarkMode, 
+  checkpoints, 
+  onToggleCheckpoint,
+  appMode,
+  onModeChange,
+  onViewHistory,
+  onViewSettings
+}: ChatViewProps) {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -130,7 +172,13 @@ export function ChatView({ messages, onSendMessage, isLoading, onStopResponse, o
     <div 
       className="flex flex-col md:flex-row h-[100dvh] w-full p-0 md:p-3 lg:p-4 font-sans overflow-hidden relative bg-[#fcfcfc] dark:bg-[#050505]"
     >
-      <Sidebar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} onNewChat={onNewChat} />
+      <Sidebar 
+        isDarkMode={isDarkMode} 
+        toggleDarkMode={toggleDarkMode} 
+        onNewChat={onNewChat} 
+        onViewHistory={onViewHistory}
+        onViewSettings={onViewSettings}
+      />
       
       <main className="flex-1 relative flex flex-col min-h-0 md:ml-2 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 z-10">
         <div className="flex-1 relative overflow-hidden min-h-0 flex flex-col bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] border-0 md:border border-white/80 dark:border-[#1a1a1a] shadow-2xl">
@@ -153,8 +201,12 @@ export function ChatView({ messages, onSendMessage, isLoading, onStopResponse, o
           >
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center">
-                <Greeting />
-                <Cards />
+                <Skeleton name="landing-greeting" loading={isLoading}>
+                  <Greeting />
+                </Skeleton>
+                <Skeleton name="landing-cards" loading={isLoading}>
+                  <Cards onSelect={onSendMessage} />
+                </Skeleton>
               </div>
             ) : (
               <div className="flex flex-col gap-6 py-4">
@@ -176,6 +228,8 @@ export function ChatView({ messages, onSendMessage, isLoading, onStopResponse, o
                                 setEditorActiveLine(activeLine);
                                 // Removed automatic editor opening as requested
                               }}
+                              appMode={appMode}
+                              onModeChange={onModeChange}
                             />
                           ) : (
                             <div className="flex flex-col gap-4">
@@ -185,7 +239,8 @@ export function ChatView({ messages, onSendMessage, isLoading, onStopResponse, o
                                 ) : (
                                   <div key={i} className="markdown-body prose prose-sm max-w-none font-sans text-gray-900 dark:text-gray-100">
                                     <ReactMarkdown
-                                      remarkPlugins={[remarkGfm]}
+                                      remarkPlugins={[remarkGfm, remarkMath]}
+                                      rehypePlugins={[rehypeKatex]}
                                       components={{
                                         code({ node, inline, className, children, ...props }: any) {
                                           const match = /language-(\w+)/.exec(className || '');

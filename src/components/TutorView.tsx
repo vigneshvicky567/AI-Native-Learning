@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GraphVisual } from './GraphVisual';
 import { CodeBlock } from './CodeBlock';
+import { ChallengeMode } from './ChallengeMode';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { CHALLENGES } from '../data/challenges';
 import { motion } from 'motion/react';
+import { GoogleGenAI } from '@google/genai';
 import {
   Play, Pause, SkipBack, SkipForward, ChevronsLeft, ChevronsRight,
   BrainCircuit, CheckCircle2, ChevronDown, ChevronUp, Maximize2, Minimize2,
-  Keyboard, GripHorizontal
+  Keyboard, GripHorizontal, Loader2, Compass, X
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -49,7 +57,19 @@ interface TutorData {
 interface TutorViewProps {
   data: TutorData;
   onCodeUpdate?: (code: string, language: string, activeLine?: number) => void;
+  appMode: 'deep-work' | 'crisis-mode' | 'quick-check';
+  onModeChange: (mode: 'deep-work' | 'crisis-mode' | 'quick-check') => void;
 }
+
+// ─── Challenges ────────────────────────────────────────────────────────────
+const challenges = [
+  "What would happen if val equalled root.val exactly?",
+  "If node 10 had no left child, what would insert return?",
+  "Why compare val to root.val and not to val directly?",
+  "What base case is this recursion heading toward?",
+  "Why return Node(val) instead of just setting root = Node(val)?",
+  "If we did not return root at the end, what would break?"
+];
 
 // ─── Speed options ─────────────────────────────────────────────────────────
 
@@ -235,7 +255,10 @@ function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
 
 // ─── Main TutorView ───────────────────────────────────────────────────────
 
-export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
+// Initialize Gemini API at top level to match App.tsx pattern
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export function TutorView({ data, onCodeUpdate, appMode, onModeChange }: TutorViewProps) {
   const [currentStep, setCurrentStep]     = useState(0);
   const [isPlaying, setIsPlaying]         = useState(false);
   const [speedIdx, setSpeedIdx]           = useState(1);          // default 1× (2000ms)
@@ -243,7 +266,47 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
   const [showQuizAnswer, setShowQuizAnswer] = useState(false);
   const [isFullscreen, setIsFullscreen]   = useState(false);
   const [showKeyHelp, setShowKeyHelp]     = useState(false);
+
+  // appMode state removed - now using props
+
+  // Token State
+  const [tokens, setTokens] = useState(() => {
+    const today = new Date().toDateString();
+    const saved = localStorage.getItem('fastPassDate');
+    if (saved !== today) {
+      localStorage.setItem('fastPassDate', today);
+      localStorage.setItem('fastPassTokens', '5');
+      return 5;
+    }
+    return parseInt(localStorage.getItem('fastPassTokens') || '5');
+  });
+
+  // localStorage is written in exactly one place (this effect)
+  useEffect(() => {
+    localStorage.setItem('fastPassTokens', tokens.toString());
+  }, [tokens]);
+
+  // Fast-Pass Intercept State
+  const [showSkipPanel, setShowSkipPanel] = useState(false);
+  const [defendedSteps, setDefendedSteps] = useState<Set<number>>(new Set());
+  const [tokenUsedSteps, setTokenUsedSteps] = useState<Set<number>>(new Set());
+  const [showToast, setShowToast] = useState(false);
+
+  // Challenge State
+  const [showChallenge, setShowChallenge] = useState(false);
+  const [challengeAnswer, setChallengeAnswer] = useState("");
+  const [isSubmittingChallenge, setIsSubmittingChallenge] = useState(false);
+  const [challengeResult, setChallengeResult] = useState<{
+    correct_variable: boolean;
+    reasoning_valid: boolean;
+    limits_acknowledged: boolean;
+    feedback: string;
+  } | null>(null);
+  const [isChallengePassed, setIsChallengePassed] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
+  const completionBonusGiven = useRef(false);
 
   const steps    = data.steps || [];
   const hasSteps = steps.length > 0;
@@ -251,6 +314,90 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
   const isFirst  = currentStep === 0;
   const isLast   = currentStep === steps.length - 1;
   const progress = hasSteps ? ((currentStep) / (steps.length - 1)) * 100 : 0;
+
+  // ── Gemini API for Challenge ───────────────────────────────────────────
+  const handleChallengeSubmit = async () => {
+    if (!challengeAnswer.trim()) return;
+    setIsSubmittingChallenge(true);
+    try {
+      const question = challenges[currentStep % challenges.length];
+      const prompt = `You are evaluating a learner's defence of their understanding of a BST insert step. 
+Question asked: ${question}
+Learner answer: ${challengeAnswer}
+Return JSON only, no markdown, no explanation outside JSON:
+{
+  correct_variable: true or false,
+  reasoning_valid: true or false,
+  limits_acknowledged: true or false,
+  feedback: 'exactly 2 sentences'
+}`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const result = JSON.parse(response.text);
+      setChallengeResult(result);
+    } catch (error) {
+      console.error("Challenge evaluation error:", error);
+    } finally {
+      setIsSubmittingChallenge(false);
+    }
+  };
+
+  const handleContinue = () => {
+    setShowChallenge(false);
+    setChallengeAnswer("");
+    setChallengeResult(null);
+    setIsChallengePassed(true);
+    setDefendedSteps(prev => new Set(prev).add(currentStep));
+  };
+
+  const handleUseToken = () => {
+    if (tokens > 0) {
+      const newTokens = tokens - 1;
+      setTokens(newTokens);
+      setTokenUsedSteps(prev => new Set(prev).add(currentStep));
+      setDefendedSteps(prev => new Set(prev).add(currentStep));
+      setShowSkipPanel(false);
+      setIsChallengePassed(true);
+      goTo(currentStep + 1);
+    }
+  };
+
+  const handleTakeChallenge = () => {
+    setShowSkipPanel(false);
+    setShowChallenge(true);
+  };
+
+  // Reset challenge state when step changes
+  useEffect(() => {
+    setShowChallenge(false);
+    setChallengeAnswer("");
+    setChallengeResult(null);
+    setIsChallengePassed(defendedSteps.has(currentStep));
+    setShowSkipPanel(false);
+  }, [currentStep, defendedSteps]);
+
+  // Completion bonus check
+  useEffect(() => {
+    if (
+      hasSteps && 
+      currentStep === steps.length - 1 && 
+      steps.length > 1 &&
+      tokenUsedSteps.size === 0 &&
+      !completionBonusGiven.current
+    ) {
+      completionBonusGiven.current = true;
+      setTokens(prev => Math.min(5, prev + 2));
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  }, [currentStep, steps.length, hasSteps, tokenUsedSteps.size]);
 
   // Resolve data structures for current step
   const dsArray: DSState[] = step
@@ -269,7 +416,14 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
   const goFirst = useCallback(() => { setIsPlaying(false); goTo(0); }, [goTo]);
   const goLast  = useCallback(() => { setIsPlaying(false); goTo(steps.length - 1); }, [goTo, steps.length]);
   const goPrev  = useCallback(() => { setIsPlaying(false); goTo(currentStep - 1); }, [currentStep, goTo]);
-  const goNext  = useCallback(() => { setIsPlaying(false); goTo(currentStep + 1); }, [currentStep, goTo]);
+  const goNext  = useCallback(() => { 
+    if (appMode === 'deep-work' && !isChallengePassed && !isLast) {
+      setShowSkipPanel(true);
+      return;
+    }
+    setIsPlaying(false); 
+    goTo(currentStep + 1); 
+  }, [currentStep, goTo, appMode, isChallengePassed, isLast]);
 
   // ── Autoplay ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -328,8 +482,32 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
   };
 
   // ─────────────────────────────────────────────────────────────────────────
+  if (isMinimized) {
+    return (
+      <div className="w-full max-w-5xl mx-auto">
+        <button 
+          onClick={() => setIsMinimized(false)}
+          className="flex items-center gap-3 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Compass size={18} className="animate-pulse" />
+          <span className="font-semibold text-sm">Open Interactive Visualizer</span>
+          <ChevronDown size={16} className="ml-2 opacity-60" />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div ref={containerRef} className="flex flex-col gap-6 w-full max-w-5xl mx-auto text-gray-900 dark:text-slate-200">
+    <div ref={containerRef} className="flex flex-col gap-6 w-full max-w-5xl mx-auto text-gray-900 dark:text-slate-200 relative">
+      
+      {/* Close/Minimize Button */}
+      <button 
+        onClick={() => setIsMinimized(true)}
+        className="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-slate-800 border border-black/10 dark:border-white/10 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-500/30 shadow-md z-[60] transition-all group"
+        title="Close Visualizer"
+      >
+        <X size={16} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform" />
+      </button>
 
       {/* Note banner */}
       {data.note && (
@@ -376,6 +554,23 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
             </div>
             
             <div className="flex gap-1">
+              {['deep-work', 'crisis-mode', 'quick-check'].map((m) => (
+                <button 
+                  key={m} 
+                  onClick={() => onModeChange(m as any)}
+                  className={`border rounded-md text-[10px] px-2 py-1 font-medium transition-all ${appMode === m ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-[#f7f7fc] dark:bg-[#1c1c2a] border-black/10 dark:border-white/10 text-[#9898b4] hover:bg-[#ece9fd] hover:text-[#5b4fe8]'}`}
+                >
+                  {m.replace('-', ' ')}
+                </button>
+              ))}
+              {appMode === 'crisis-mode' && (
+                <span className="text-[10px] text-red-400 font-medium ml-1 flex items-center">
+                  Direct answers only
+                </span>
+              )}
+            </div>
+
+            <div className="flex gap-1">
               {SPEEDS.map((s, i) => (
                 <button key={i} onClick={() => setSpeedIdx(i)} className={`border rounded-md text-[10px] px-2 py-1 font-medium transition-all ${i === speedIdx ? 'bg-[#5b4fe8] text-white border-[#5b4fe8]' : 'bg-[#f7f7fc] dark:bg-[#1c1c2a] border-black/10 dark:border-white/10 text-[#9898b4] hover:bg-[#ece9fd] hover:text-[#5b4fe8]'}`}>
                   {s.label}
@@ -386,12 +581,88 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
             <span className="bg-[#ece9fd] dark:bg-[#5b4fe8]/20 text-[#5b4fe8] dark:text-[#7b6cff] rounded-full px-3 py-1 text-[11px] font-semibold ml-1">
               {currentStep + 1} / {steps.length}
             </span>
+
+            {/* Token Display */}
+            <div className={`ml-auto flex items-center gap-2 ${appMode !== 'deep-work' ? 'opacity-40' : ''}`}>
+              <span className="text-xs text-gray-400">Fast-Pass</span>
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`w-[10px] h-[10px] rounded-full transition-colors ${i < tokens ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Hint Bar */}
           <div className="bg-[#ece9fd] dark:bg-[#5b4fe8]/10 border-b border-[#5b4fe8]/20 border-l-[3px] border-l-[#5b4fe8] px-5 py-2 text-xs text-[#5b4fe8] dark:text-[#7b6cff] font-medium shrink-0">
-            <span dangerouslySetInnerHTML={{ __html: step?.label || '' }} />
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+              {step?.label || ''}
+            </ReactMarkdown>
           </div>
+
+          {/* Fast-Pass Skip Panel */}
+          {appMode === 'deep-work' && showSkipPanel && (
+            <div className="px-5 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-1">
+              <span className="text-sm text-indigo-900 dark:text-indigo-200 font-medium">
+                Skip the challenge? Use a Fast-Pass.
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUseToken}
+                  disabled={tokens === 0}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    tokens > 0 
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Use token ({tokens} left)
+                </button>
+                <button
+                  onClick={handleTakeChallenge}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-all"
+                >
+                  Take the challenge
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Challenge System */}
+          {appMode === 'deep-work' && showChallenge && (
+            <div className="fixed inset-0 z-[100] bg-white dark:bg-[#050505] animate-in fade-in zoom-in-95 duration-300">
+              <ChallengeMode 
+                isDarkMode={document.documentElement.classList.contains('dark')}
+                challenge={CHALLENGES[currentStep % CHALLENGES.length]}
+                onClose={() => setShowChallenge(false)}
+                onSuccess={() => {
+                  setIsChallengePassed(true);
+                  setDefendedSteps(prev => new Set(prev).add(currentStep));
+                  setShowChallenge(false);
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 3000);
+                }}
+              />
+            </div>
+          )}
+
+          {appMode === 'deep-work' && !showChallenge && !isChallengePassed && (
+            <div className="px-5 py-3 bg-white dark:bg-[#14141f] border-b border-black/5 dark:border-white/5 shrink-0 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="text-indigo-600 w-5 h-5" />
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Challenge available for this step</span>
+              </div>
+              <button
+                onClick={() => setShowChallenge(true)}
+                className="bg-indigo-600 text-white rounded-lg px-4 py-1.5 text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+              >
+                Take Challenge
+              </button>
+            </div>
+          )}
 
           {/* Body Grid */}
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_248px_1fr] min-h-0">
@@ -511,9 +782,11 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
                 </div>
               </div>
             ))}
-            <p className="text-sm text-gray-600 dark:text-slate-400 mt-4 pt-4 border-t border-gray-100 dark:border-slate-800/50">
-              {data.complexity.explanation}
-            </p>
+            <div className="text-sm text-gray-600 dark:text-slate-400 mt-4 pt-4 border-t border-gray-100 dark:border-slate-800/50 prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                {data.complexity.explanation}
+              </ReactMarkdown>
+            </div>
           </div>
         )}
 
@@ -521,11 +794,6 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
           <ComparisonTable rows={data.comparison} />
         )}
       </div>
-
-      {/* Checkpoints */}
-      {data.checkpoints && data.checkpoints.length > 0 && (
-        <CheckpointsBanner checkpoints={data.checkpoints} />
-      )}
 
       {/* Quiz */}
       {data.quiz && (
@@ -574,6 +842,13 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Completion Toast */}
+      {showToast && (
+        <div className="fixed bottom-6 right-6 bg-indigo-600 text-white rounded-xl px-4 py-3 text-sm shadow-2xl animate-in fade-in slide-in-from-bottom-4 z-[100]">
+          +2 Fast-Pass credits earned — deep work session complete
         </div>
       )}
     </div>

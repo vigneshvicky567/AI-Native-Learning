@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Info, AlertTriangle, CheckCircle2, ListChecks, ArrowRight, Lightbulb, Code2, BrainCircuit } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
 import { GraphVisual } from './GraphVisual';
@@ -102,7 +105,7 @@ export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpe
           case 'text':
             return (
               <div key={i} className="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 leading-relaxed">
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{block.content || ''}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={markdownComponents}>{block.content || ''}</ReactMarkdown>
               </div>
             );
             
@@ -122,7 +125,7 @@ export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpe
                     </h4>
                     {block.description && (
                       <div className="text-sm text-indigo-700 dark:text-indigo-300 leading-relaxed">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{block.description}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={markdownComponents}>{block.description}</ReactMarkdown>
                       </div>
                     )}
                   </div>
@@ -155,7 +158,7 @@ export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpe
                 <div>
                   {block.label && <h4 className={`font-bold text-sm mb-1 ${v.text}`}>{block.label}</h4>}
                   <div className={`text-[15px] ${v.text} opacity-90 leading-relaxed prose prose-sm max-w-none prose-p:my-0 prose-a:text-blue-600`}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{block.content || ''}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={markdownComponents}>{block.content || ''}</ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -180,7 +183,7 @@ export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpe
                         {idx + 1}
                       </div>
                       <div className="text-[15px] text-gray-700 dark:text-gray-300 pt-0.5 leading-relaxed prose prose-sm max-w-none prose-p:my-0">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{item}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={markdownComponents}>{item}</ReactMarkdown>
                       </div>
                     </div>
                   ))}
@@ -236,7 +239,7 @@ export function BlockRenderer({ blocks, onOpenEditor }: { blocks: Block[], onOpe
                 {block.items?.map((item: string, idx: number) => (
                   <div key={idx} className="flex-1 min-w-[200px] border border-gray-200 dark:border-gray-800 border-l-4 border-l-teal-500 p-4 rounded-lg flex items-start gap-3">
                     <div className="text-[14px] text-gray-800 dark:text-gray-200 font-medium leading-relaxed prose prose-sm max-w-none prose-p:my-0 prose-a:text-teal-700 dark:prose-a:text-teal-400">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{item}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={markdownComponents}>{item}</ReactMarkdown>
                     </div>
                   </div>
                 ))}

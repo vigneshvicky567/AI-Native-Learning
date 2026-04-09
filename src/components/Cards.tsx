@@ -1,10 +1,17 @@
 import React from 'react';
 
-export function Cards() {
+interface CardsProps {
+  onSelect?: (prompt: string) => void;
+}
+
+export function Cards({ onSelect }: CardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative w-full max-w-4xl mx-auto px-2 font-sans">
       {/* Card 1 */}
-      <div className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
+      <div 
+        onClick={() => onSelect?.("I want to learn programming with Python. Let's start with the basics of variables and data types.")}
+        className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group"
+      >
         <div className="mb-4 w-14 h-14 rounded-xl bg-pink-50/80 dark:bg-pink-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {/* Stacked Layers Icon */}
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -20,7 +27,10 @@ export function Cards() {
       </div>
 
       {/* Card 2 - Staggered down */}
-      <div className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] mt-0 md:mt-8 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group">
+      <div 
+        onClick={() => onSelect?.("I want to dive deep into Calculus. Can we start with an introduction to limits and derivatives?")}
+        className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] mt-0 md:mt-8 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group"
+      >
         <div className="mb-4 w-14 h-14 rounded-xl bg-purple-50/80 dark:bg-purple-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {/* Generic Book/Study Icon */}
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -36,7 +46,10 @@ export function Cards() {
       </div>
 
       {/* Card 3 */}
-      <div className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] mt-6 md:mt-0 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group relative">
+      <div 
+        onClick={() => onSelect?.("Help me organize my study time and set clear priorities for my upcoming exams.")}
+        className="bg-transparent p-6 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col h-[220px] mt-6 md:mt-0 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer group relative"
+      >
         
         {/* Robot Character */}
         <div className="absolute -top-[80px] right-0 z-10 animate-bounce pointer-events-none scale-[0.7] origin-bottom-right">

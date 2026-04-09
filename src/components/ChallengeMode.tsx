@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { ChallengePanel } from './ChallengePanel';
 import { CodeEditor } from './CodeEditor';
 import { useChallengeChecker } from '../hooks/useChallengeChecker';
@@ -8,12 +9,21 @@ import type { Challenge, ChallengeStatus } from '../types/challenge';
 interface ChallengeModeProps {
   isDarkMode?: boolean;
   challenge?: Challenge;
+  onClose?: () => void;
+  onSuccess?: () => void;
 }
 
-export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0] }: ChallengeModeProps) {
+export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0], onClose, onSuccess }: ChallengeModeProps) {
   const [status, setStatus] = useState<ChallengeStatus>('idle');
   const [code, setCode] = useState(challenge.starterCode);
   const { checkSolution, isChecking, result, reset } = useChallengeChecker();
+
+  // Handle success
+  useEffect(() => {
+    if (result?.passed && onSuccess) {
+      onSuccess();
+    }
+  }, [result, onSuccess]);
   
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
@@ -65,7 +75,16 @@ export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0] }:
   }, [result]);
 
   return (
-    <div className="flex flex-col md:flex-row gap-3 h-full w-full p-3 overflow-y-auto md:overflow-hidden">
+    <div className="flex flex-col md:flex-row gap-3 h-full w-full p-3 overflow-y-auto md:overflow-hidden relative">
+      {onClose && (
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
+          title="Exit Challenge"
+        >
+          <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+        </button>
+      )}
       {/* Left: challenge panel — fixed width on desktop, full on mobile */}
       <div className="w-full md:w-[320px] shrink-0 h-auto md:h-full">
         <ChallengePanel

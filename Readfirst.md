@@ -53,9 +53,11 @@ Lexi AI is an AI-native learning website dashboard inspired by a modern assistan
 - **Outcome**: Successfully gathered context about the app's functionality, its client-side limitations, and the planned backend architecture.
 - **Action**: Created this `Readfirst.md` file as requested by the user.
 - **Outcome**: The `Readfirst.md` file now exists and provides a comprehensive overview of the project, its working/non-working parts, and a brief description of every file.
-- **Action**: Removed the floating menu and integrated "Stop Response" and "New Chat" functionality into existing UI components (Sidebar and InputArea).
-- **Outcome**: Improved UI consistency and removed redundant buttons.
-- **Action**: Prevented the code editor from opening automatically when tutor data is updated.
-- **Outcome**: Resolved user complaint about the editor "popping up" unexpectedly.
-- **Action**: Implemented "Stop Response" functionality in the `PromptInputBox` by adding an `onStop` callback to the send button when in a loading state.
-- **Outcome**: Users can now cancel AI response generation directly from the input area.
+- **Action**: Implemented the "Defend Button" system in `TutorView.tsx`.
+- **Outcome**: In "Deep Work" mode, users are now challenged with specific questions at each step of the BST insertion tutorial. They must "defend" their understanding by submitting an answer, which is evaluated by the Gemini API.
+- **Action**: Added an `appMode` state to control the learning experience.
+- **Outcome**: Users can switch between "Deep Work" (intercepts navigation with challenges), "Crisis Mode", and "Quick Check" (normal navigation) via a new selector in the header.
+- **Action**: Integrated Gemini API directly into `TutorView.tsx` for real-time evaluation of learner defenses.
+- **Outcome**: Provides immediate, AI-driven feedback on the user's conceptual understanding, reasoning, and awareness of limits.
+- **Action**: Modified navigation logic to require challenge completion in "Deep Work" mode.
+- **Outcome**: Ensures users actually understand a step before moving on, reinforcing deep learning.

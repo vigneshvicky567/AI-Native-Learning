@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { LandingPage } from './components/LandingPage';
 import { ChatView, Message } from './components/ChatView';
 import { GoogleGenAI } from '@google/genai';
@@ -23,6 +23,21 @@ export default function App() {
   const [view, setView] = useState<'landing' | 'chat'>('landing');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const stopResponse = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setCheckpoints([]);
+    setView('landing');
+  };
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
 
@@ -452,6 +467,8 @@ compare visually / live demo / side by side?
 
 **Correctness > Completeness > Visual Clarity > Brevity**`;
 
+      abortControllerRef.current = new AbortController();
+
       const responseStream = await ai.models.generateContentStream({
         model: targetModel,
         contents: contents,
@@ -461,44 +478,53 @@ compare visually / live demo / side by side?
       });
       
       let fullText = '';
-      for await (const chunk of responseStream) {
-        if (chunk.text) {
-          fullText += chunk.text;
-          
-          let parsedData = null;
-          
-          // Only try to parse JSON if it doesn't look like a <visual> response
-          if (!fullText.includes('<visual>')) {
-            const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              try {
-                parsedData = JSON.parse(jsonMatch[0]);
-              } catch (e) {
-                // Try partial parsing
-                try { parsedData = JSON.parse(jsonMatch[0] + '}'); } catch (e2) {
-                  try { parsedData = JSON.parse(jsonMatch[0] + ']}'); } catch (e3) {
-                    try { parsedData = JSON.parse(jsonMatch[0] + '}]}'); } catch (e4) {
-                      try { parsedData = JSON.parse(jsonMatch[0] + '"]}]}'); } catch (e5) {
-                        try { parsedData = JSON.parse(jsonMatch[0] + '"]}}'); } catch (e6) {}
+      try {
+        for await (const chunk of responseStream) {
+          if (abortControllerRef.current?.signal.aborted) break;
+          if (chunk.text) {
+            fullText += chunk.text;
+            
+            let parsedData = null;
+            
+            // Only try to parse JSON if it doesn't look like a <visual> response
+            if (!fullText.includes('<visual>')) {
+              const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                try {
+                  parsedData = JSON.parse(jsonMatch[0]);
+                } catch (e) {
+                  // Try partial parsing
+                  try { parsedData = JSON.parse(jsonMatch[0] + '}'); } catch (e2) {
+                    try { parsedData = JSON.parse(jsonMatch[0] + ']}'); } catch (e3) {
+                      try { parsedData = JSON.parse(jsonMatch[0] + '}]}'); } catch (e4) {
+                        try { parsedData = JSON.parse(jsonMatch[0] + '"]}]}'); } catch (e5) {
+                          try { parsedData = JSON.parse(jsonMatch[0] + '"]}}'); } catch (e6) {}
+                        }
                       }
                     }
                   }
                 }
               }
             }
-          }
-          
-          setMessages(prev => {
-            const newMessages = [...prev];
-            newMessages[newMessages.length - 1].text = fullText;
-            if (parsedData) {
-              newMessages[newMessages.length - 1].tutorData = parsedData;
-              if (parsedData.checkpoints && Array.isArray(parsedData.checkpoints)) {
-                setCheckpoints(parsedData.checkpoints);
+            
+            setMessages(prev => {
+              const newMessages = [...prev];
+              newMessages[newMessages.length - 1].text = fullText;
+              if (parsedData) {
+                newMessages[newMessages.length - 1].tutorData = parsedData;
+                if (parsedData.checkpoints && Array.isArray(parsedData.checkpoints)) {
+                  setCheckpoints(parsedData.checkpoints);
+                }
               }
-            }
-            return newMessages;
-          });
+              return newMessages;
+            });
+          }
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
+          console.log('Response generation aborted');
+        } else {
+          throw err;
         }
       }
     } catch (error) {
@@ -529,7 +555,9 @@ compare visually / live demo / side by side?
         <ChatView 
           messages={messages} 
           onSendMessage={sendMessage} 
-          isLoading={isLoading} 
+          isLoading={isLoading}
+          onStopResponse={stopResponse}
+          onNewChat={handleNewChat}
           isDarkMode={isDarkMode}
           toggleDarkMode={toggleDarkMode}
           checkpoints={checkpoints}

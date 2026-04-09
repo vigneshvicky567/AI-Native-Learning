@@ -439,12 +439,13 @@ const CustomDivider: React.FC = () => (
 // Main PromptInputBox Component
 interface PromptInputBoxProps {
   onSend?: (message: string, files?: File[]) => void;
+  onStop?: () => void;
   isLoading?: boolean;
   placeholder?: string;
   className?: string;
 }
 export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref: React.Ref<HTMLDivElement>) => {
-  const { onSend = () => {}, isLoading = false, placeholder = "Type your message here...", className } = props;
+  const { onSend = () => {}, onStop = () => {}, isLoading = false, placeholder = "Type your message here...", className } = props;
   const [input, setInput] = React.useState("");
   const [files, setFiles] = React.useState<File[]>([]);
   const [filePreviews, setFilePreviews] = React.useState<{ [key: string]: string }>({});
@@ -813,11 +814,12 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                   : "bg-transparent hover:bg-gray-200/50 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               )}
               onClick={() => {
-                if (isRecording) setIsRecording(false);
+                if (isLoading) onStop();
+                else if (isRecording) setIsRecording(false);
                 else if (hasContent) handleSubmit();
                 else setIsRecording(true);
               }}
-              disabled={isLoading && !hasContent}
+              disabled={isLoading && !hasContent && !onStop}
             >
               {isLoading ? (
                 <Square className="h-4 w-4 fill-black animate-pulse" />

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { X, Minimize2, Maximize2, Terminal, Play, Loader2, Wand2 } from 'lucide-react';
 import { useAiErrorFix } from '../hooks/useAiErrorFix';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface CodeEditorProps {
   isOpen: boolean;
@@ -15,12 +16,14 @@ interface CodeEditorProps {
   activeLine?: number;
   editorRef?: React.MutableRefObject<any>;
   monacoRef?: React.MutableRefObject<any>;
+  inline?: boolean;
 }
 
 export function CodeEditor({
   isOpen, onClose, initialCode = '', language = 'python',
   onRunCode, onChangeCode, isLoading, isDarkMode = false, activeLine,
-  editorRef: externalEditorRef, monacoRef: externalMonacoRef
+  editorRef: externalEditorRef, monacoRef: externalMonacoRef,
+  inline = false
 }: CodeEditorProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [code, setCode] = useState(initialCode);
@@ -36,7 +39,7 @@ export function CodeEditor({
   const monacoRef = externalMonacoRef || internalMonacoRef;
   
   const decorationsRef = useRef<string[]>([]);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const codeActionRef = useRef<any>(null);
 
   const { fixError } = useAiErrorFix(editorRef, monacoRef, language, setCode);
@@ -245,7 +248,13 @@ export function CodeEditor({
     if (initialCode) runDiagnostics(initialCode, language);
   }, [registerCodeActions, runDiagnostics, initialCode, language]);
 
-  if (!isOpen) return null;
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fileExtMap: Record<string, string> = {
     python: 'py', javascript: 'js', typescript: 'ts',
@@ -254,129 +263,148 @@ export function CodeEditor({
   };
 
   return (
-    <>
-      {/* Mobile Backdrop */}
-      <div 
-        className={`md:hidden fixed inset-0 bg-black/20 z-40 transition-opacity ${isMaximized ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setIsMaximized(false)}
-      />
-
-      <div 
-        className={`
-          flex flex-col shadow-2xl ease-in-out z-50 font-sans backdrop-blur-xl
-          ${isDarkMode ? 'bg-[#050505]/95 border-gray-800' : 'bg-white/95 border-gray-200'}
-          ${(!isDraggingWidth && !isDraggingHeight) ? 'transition-all duration-300' : ''}
-          ${isMaximized 
-            ? 'fixed inset-0 md:inset-4 md:rounded-2xl' 
-            : 'fixed bottom-0 left-0 right-0 top-[env(safe-area-inset-top,2rem)] rounded-t-2xl md:top-auto md:relative md:rounded-2xl md:ml-2 md:w-[var(--editor-width)] md:self-end'
-          }
-          border overflow-hidden
-        `}
-        style={{
-          ...(!isMaximized ? { 
-            '--editor-width': `${editorWidth}px`,
-            height: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${editorHeight}px` : undefined
-          } : {})
-        } as React.CSSProperties}
-      >
-        {!isMaximized && (
-          <>
-            <div
-              className="hidden md:block absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-indigo-500/50 z-50 transition-colors"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setIsDraggingWidth(true);
-              }}
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Mobile Backdrop */}
+          {!inline && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className={`md:hidden fixed inset-0 bg-black/20 z-40 ${isMaximized ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              onClick={() => setIsMaximized(false)}
             />
-            <div
-              className="absolute top-0 left-0 right-0 h-2 cursor-row-resize hover:bg-indigo-500/50 z-50 transition-colors"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setIsDraggingHeight(true);
-              }}
-            />
-          </>
-        )}
-        {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 bg-transparent border-b cursor-default select-none ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-          <div className="flex items-center gap-4">
-            <div className="flex gap-2">
-              <div className="w-3.5 h-3.5 rounded-full bg-[#FF5F56]"></div>
-              <div className="w-3.5 h-3.5 rounded-full bg-[#FFBD2E]"></div>
-              <div className="w-3.5 h-3.5 rounded-full bg-[#27C93F]"></div>
-            </div>
-            <div className={`flex items-center gap-2 text-[13px] font-bold px-3 py-1.5 rounded-md border shadow-sm ${isDarkMode ? 'text-gray-300 bg-gray-800 border-gray-700' : 'text-gray-700 bg-gray-100 border-gray-200'}`}>
-              <Terminal size={14} />
-              <span>main.{fileExtMap[language] ?? 'txt'}</span>
-            </div>
+          )}
 
-            {/* Error badge */}
-            {errorCount > 0 && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 text-red-500 text-xs font-semibold rounded-md border border-red-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
-                {errorCount} error{errorCount > 1 ? 's' : ''} — click lightbulb to fix
-              </div>
+          <motion.div 
+            initial={inline ? {} : (isMobile ? { y: '100%', opacity: 0 } : { x: 50, opacity: 0 })}
+            animate={inline ? {} : { y: 0, x: 0, opacity: 1 }}
+            exit={inline ? {} : (isMobile ? { y: '100%', opacity: 0 } : { x: 50, opacity: 0 })}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className={`
+              flex flex-col shadow-2xl z-50 font-sans backdrop-blur-xl
+              ${isDarkMode ? 'bg-[#050505]/95 border-gray-800' : 'bg-white/95 border-gray-200'}
+              ${inline
+                ? 'relative w-full h-full rounded-2xl'
+                : isMaximized 
+                  ? 'fixed inset-0 md:inset-4 md:rounded-2xl' 
+                  : 'fixed bottom-0 left-0 right-0 h-[45vh] rounded-t-2xl md:bottom-auto md:left-auto md:right-auto md:h-auto md:top-auto md:relative md:rounded-2xl md:ml-2 md:w-[var(--editor-width)] md:self-end'
+              }
+              border overflow-hidden
+            `}
+            style={{
+              ...(!isMaximized && !inline ? { 
+                '--editor-width': `${editorWidth}px`,
+                height: !isMobile ? `${editorHeight}px` : undefined
+              } : {})
+            } as React.CSSProperties}
+          >
+            {!isMaximized && (
+              <>
+                <div
+                  className="hidden md:block absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-indigo-500/50 z-50 transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setIsDraggingWidth(true);
+                  }}
+                />
+                <div
+                  className="hidden md:block absolute top-0 left-0 right-0 h-2 cursor-row-resize hover:bg-indigo-500/50 z-50 transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setIsDraggingHeight(true);
+                  }}
+                />
+              </>
             )}
-          </div>
-          <div className="flex items-center gap-3">
-            {onRunCode && (
-              <button 
-                onClick={() => onRunCode(code, language)}
-                disabled={isLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:text-white/70 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
-              >
-                {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                {isLoading ? 'Running...' : 'Run Code'}
-              </button>
-            )}
-            <button 
-              onClick={() => setIsMaximized(!isMaximized)} 
-              className={`w-8 h-8 flex items-center justify-center bg-transparent rounded-md border transition-all duration-200 ${isDarkMode ? 'text-gray-400 hover:text-gray-100 border-gray-700 hover:bg-gray-800' : 'text-gray-500 hover:text-gray-900 border-gray-200 hover:bg-gray-100'}`}
-              title={isMaximized ? "Minimize" : "Maximize"}
-            >
-              {isMaximized ? <Minimize2 size={14} strokeWidth={2.5} /> : <Maximize2 size={14} strokeWidth={2.5} />}
-            </button>
-            <button 
-              onClick={onClose} 
-              className={`w-8 h-8 flex items-center justify-center bg-transparent rounded-md border transition-all duration-200 ${isDarkMode ? 'text-gray-400 hover:text-gray-100 border-gray-700 hover:bg-gray-800' : 'text-gray-500 hover:text-gray-900 border-gray-200 hover:bg-gray-100'}`}
-              title="Close Editor"
-            >
-              <X size={16} strokeWidth={2.5} />
-            </button>
-          </div>
-        </div>
-        
-        {/* Editor Area */}
-        <div className="flex-1 w-full relative bg-transparent">
-          <Editor
-            height="100%"
-            language={language}
-            theme={isDarkMode ? "transparentThemeDark" : "transparentThemeLight"}
-            onMount={handleEditorMount}
-            value={code}
-            onChange={(val) => handleCodeChange(val || '')}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 13,
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              padding: { top: 16, bottom: 16 },
-              scrollBeyondLastLine: false,
-              wordWrap: 'on',
-              smoothScrolling: true,
-              cursorBlinking: "smooth",
-              lineNumbersMinChars: 3,
-              lightbulb: { enabled: true },    // show the lightbulb icon
-              quickSuggestions: true,
-              glyphMargin: true,               // needed for glyph decorations
-            }}
-            loading={
-              <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                Loading editor...
+            {/* Header */}
+            <div className={`flex items-center justify-between px-4 md:px-5 py-3 md:py-4 bg-transparent border-b cursor-default select-none ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="hidden md:flex gap-2">
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#FF5F56]"></div>
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#FFBD2E]"></div>
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#27C93F]"></div>
+                </div>
+                <div className={`flex items-center gap-2 text-[12px] md:text-[13px] font-bold px-2.5 py-1.5 rounded-md border shadow-sm ${isDarkMode ? 'text-gray-300 bg-gray-800 border-gray-700' : 'text-gray-700 bg-gray-100 border-gray-200'}`}>
+                  <Terminal size={14} />
+                  <span>main.{fileExtMap[language] ?? 'txt'}</span>
+                </div>
+
+                {/* Error badge */}
+                {errorCount > 0 && (
+                  <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 text-red-500 text-xs font-semibold rounded-md border border-red-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                    {errorCount} error{errorCount > 1 ? 's' : ''}
+                  </div>
+                )}
               </div>
-            }
-          />
-        </div>
-      </div>
-    </>
+              <div className="flex items-center gap-2 md:gap-3">
+                {onRunCode && (
+                  <button 
+                    onClick={() => onRunCode(code, language)}
+                    disabled={isLoading}
+                    className="flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:text-white/70 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
+                  >
+                    {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                    <span className="hidden sm:inline">{isLoading ? 'Running...' : 'Run Code'}</span>
+                    <span className="sm:hidden">{isLoading ? '...' : 'Run'}</span>
+                  </button>
+                )}
+                {!inline && (
+                  <>
+                    <button 
+                      onClick={() => setIsMaximized(!isMaximized)} 
+                      className={`w-8 h-8 flex items-center justify-center bg-transparent rounded-md border transition-all duration-200 ${isDarkMode ? 'text-gray-400 hover:text-gray-100 border-gray-700 hover:bg-gray-800' : 'text-gray-500 hover:text-gray-900 border-gray-200 hover:bg-gray-100'}`}
+                      title={isMaximized ? "Minimize" : "Maximize"}
+                    >
+                      {isMaximized ? <Minimize2 size={14} strokeWidth={2.5} /> : <Maximize2 size={14} strokeWidth={2.5} />}
+                    </button>
+                    <button 
+                      onClick={onClose} 
+                      className={`w-8 h-8 flex items-center justify-center bg-transparent rounded-md border transition-all duration-200 ${isDarkMode ? 'text-gray-400 hover:text-gray-100 border-gray-700 hover:bg-gray-800' : 'text-gray-500 hover:text-gray-900 border-gray-200 hover:bg-gray-100'}`}
+                      title="Close Editor"
+                    >
+                      <X size={16} strokeWidth={2.5} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {/* Editor Area */}
+            <div className="flex-1 w-full relative bg-transparent">
+              <Editor
+                height="100%"
+                language={language}
+                theme={isDarkMode ? "transparentThemeDark" : "transparentThemeLight"}
+                onMount={handleEditorMount}
+                value={code}
+                onChange={(val) => handleCodeChange(val || '')}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                  padding: { top: 16, bottom: 16 },
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  smoothScrolling: true,
+                  cursorBlinking: "smooth",
+                  lineNumbersMinChars: 3,
+                  lightbulb: { enabled: true as any },    // show the lightbulb icon
+                  quickSuggestions: true,
+                  glyphMargin: true,               // needed for glyph decorations
+                }}
+                loading={
+                  <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                    Loading editor...
+                  </div>
+                }
+              />
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

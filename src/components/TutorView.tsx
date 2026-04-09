@@ -340,152 +340,156 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
 
       {/* Main area */}
       {hasSteps && step && (
-        <div className={`flex flex-col lg:flex-row gap-4 ${isFullscreen ? 'absolute inset-0 z-50 bg-gray-50 dark:bg-[#0a0f1e] p-4 overflow-y-auto' : ''}`}>
+        <div className={`flex flex-col rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden min-h-[580px] bg-[#f0f0f8] dark:bg-[#0a0a0f] font-sans shadow-lg w-full max-w-6xl mx-auto ${isFullscreen ? 'fixed inset-4 z-50 shadow-2xl' : ''}`}>
+          <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+            .tutor-root { font-family: 'Plus Jakarta Sans', sans-serif; }
+            .tutor-mono { font-family: 'JetBrains Mono', monospace; }
+            .code-lines::-webkit-scrollbar { width: 3px; }
+            .code-lines::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+            .dark .code-lines::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+          `}</style>
 
-          {/* Left: Graph + controls */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="bg-white dark:bg-[#0a0f1e] border border-gray-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col h-full">
-
-              {/* Playback bar */}
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/50 flex-wrap">
-                {/* Controls */}
-                <button onClick={goFirst}  disabled={isFirst} title="First step (↑)"
-                  className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 disabled:opacity-30 transition-colors">
-                  <ChevronsLeft size={15} />
-                </button>
-                <button onClick={goPrev}   disabled={isFirst} title="Prev (←)"
-                  className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 disabled:opacity-30 transition-colors">
-                  <SkipBack size={15} />
-                </button>
-                <button onClick={() => setIsPlaying(p => !p)} disabled={isLast}
-                  className="p-2 rounded-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white transition-colors shadow-sm">
-                  {isPlaying ? <Pause size={15} /> : <Play size={15} className="ml-0.5" />}
-                </button>
-                <button onClick={goNext}   disabled={isLast}  title="Next (→)"
-                  className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 disabled:opacity-30 transition-colors">
-                  <SkipForward size={15} />
-                </button>
-                <button onClick={goLast}   disabled={isLast}  title="Last step (↓)"
-                  className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 disabled:opacity-30 transition-colors">
-                  <ChevronsRight size={15} />
-                </button>
-
-                {/* Step counter */}
-                <span className="text-xs font-medium text-gray-400 dark:text-slate-500 ml-1">
-                  {currentStep + 1} / {steps.length}
-                </span>
-
-                {/* Speed selector */}
-                <div className="flex items-center gap-1 ml-2">
-                  {SPEEDS.map((s, i) => (
-                    <button key={i} onClick={() => setSpeedIdx(i)}
-                      className={`text-xs px-2 py-0.5 rounded-md font-mono transition-colors ${
-                        i === speedIdx
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-gray-200 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-300 dark:hover:bg-slate-700'
-                      }`}>
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Keyboard help */}
-                <button onClick={() => setShowKeyHelp(p => !p)}
-                  className="ml-auto p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-400 dark:text-slate-500 transition-colors" title="Keyboard shortcuts">
-                  <Keyboard size={14} />
-                </button>
-
-                {/* Fullscreen */}
-                <button onClick={() => setIsFullscreen(p => !p)}
-                  className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-400 dark:text-slate-500 transition-colors">
-                  {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                </button>
-              </div>
-
-              {/* Keyboard shortcuts popover */}
-              {showKeyHelp && (
-                <div className="px-4 py-3 bg-gray-50 dark:bg-slate-900/80 border-b border-gray-200 dark:border-slate-800 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-500 dark:text-slate-400">
-                  {[['← / h', 'Previous step'], ['→ / l', 'Next step'], ['Space', 'Play / Pause'], ['↑ / k', 'First step'], ['↓ / j', 'Last step'], ['Esc', 'Exit fullscreen']].map(([k, v]) => (
-                    <div key={k} className="flex justify-between gap-2">
-                      <kbd className="font-mono bg-gray-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-gray-600 dark:text-slate-300">{k}</kbd>
-                      <span>{v}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Scrubber */}
-              <div
-                className="h-1.5 bg-gray-200 dark:bg-slate-800 cursor-pointer relative"
-                onClick={handleScrubberClick}
-                title="Click to jump to step"
-              >
-                <div
-                  className="h-full bg-indigo-600 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-
-              {/* Step label */}
-              <div className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-300 border-b border-gray-100 dark:border-slate-800 line-clamp-1">
-                {step.label}
-              </div>
-
-              {/* Graph */}
-              <div className="flex-1 relative min-h-[380px] overflow-hidden">
-                <GraphVisual
-                  nodes={step.nodes}
-                  edges={step.edges}
-                  isFullscreen={isFullscreen}
-                  onToggleFullscreen={() => setIsFullscreen(p => !p)}
-                />
-
-                {/* Floating Panels (Fullscreen Only) */}
-                {isFullscreen && (
-                  <motion.div 
-                    drag 
-                    dragMomentum={false}
-                    className="absolute top-4 right-4 flex flex-col gap-3 z-10 w-72 pointer-events-auto cursor-grab active:cursor-grabbing"
-                  >
-                    <div className="flex justify-center -mb-2 opacity-50 hover:opacity-100 transition-opacity">
-                      <div className="bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm border border-gray-200 dark:border-slate-700">
-                        <GripHorizontal size={14} className="text-gray-500" />
-                      </div>
-                    </div>
-                    <VariablesPanel vars={step.variables ?? {}} />
-                    {dsArray.map((ds, i) => <DSVisual key={i} ds={ds} />)}
-                  </motion.div>
-                )}
-              </div>
-            </div>
+          {/* Progress Bar */}
+          <div className="relative h-[3px] bg-black/5 dark:bg-white/5 shrink-0">
+            <div 
+              className="absolute top-0 left-0 h-full bg-[#5b4fe8] rounded-r-[2px] transition-all duration-400 ease-out"
+              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            />
           </div>
 
-          {/* Right: side panels (Normal View Only) */}
-          {!isFullscreen && (
-            <div className="w-full lg:w-[290px] flex flex-col gap-3 min-w-0">
-              {/* Explanation */}
-              {data.explanation && (
-                <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-2xl p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BrainCircuit size={14} className="text-indigo-500 dark:text-indigo-400" />
-                    <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Intuition</span>
-                  </div>
-                  <p className="text-[13px] leading-relaxed text-gray-700 dark:text-slate-300">{data.explanation}</p>
-                </div>
-              )}
-
-              {/* Variables */}
-              <VariablesPanel vars={step.variables ?? {}} />
-
-              {/* Data structures */}
-              {dsArray.map((ds, i) => <DSVisual key={i} ds={ds} />)}
+          {/* Toolbar */}
+          <div className="bg-white dark:bg-[#14141f] border-b border-black/10 dark:border-white/10 px-5 py-2.5 flex flex-wrap items-center gap-3 shrink-0">
+            <div className="flex items-center gap-1">
+              <button onClick={() => setCurrentStep(0)} disabled={isFirst} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">«</button>
+              <button onClick={goPrev} disabled={isFirst} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">◀</button>
+              <button onClick={() => setIsPlaying(!isPlaying)} className="bg-[#5b4fe8] hover:bg-[#7b6ff0] border-none rounded-[10px] text-white text-xs px-3.5 py-1.5 font-semibold flex items-center gap-1.5 transition-colors">
+                {isPlaying ? (
+                  <span className="flex gap-[3px]"><span className="w-[3px] h-[10px] bg-white rounded-[1px]"></span><span className="w-[3px] h-[10px] bg-white rounded-[1px]"></span></span>
+                ) : (
+                  <span className="w-0 h-0 border-y-[5px] border-y-transparent border-l-[9px] border-l-white inline-block"></span>
+                )}
+                {isPlaying ? 'pause' : 'play'}
+              </button>
+              <button onClick={goNext} disabled={isLast} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">▶</button>
+              <button onClick={() => setCurrentStep(steps.length - 1)} disabled={isLast} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">»</button>
             </div>
-          )}
+            
+            <div className="flex gap-1">
+              {SPEEDS.map((s, i) => (
+                <button key={i} onClick={() => setSpeedIdx(i)} className={`border rounded-md text-[10px] px-2 py-1 font-medium transition-all ${i === speedIdx ? 'bg-[#5b4fe8] text-white border-[#5b4fe8]' : 'bg-[#f7f7fc] dark:bg-[#1c1c2a] border-black/10 dark:border-white/10 text-[#9898b4] hover:bg-[#ece9fd] hover:text-[#5b4fe8]'}`}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            
+            <span className="bg-[#ece9fd] dark:bg-[#5b4fe8]/20 text-[#5b4fe8] dark:text-[#7b6cff] rounded-full px-3 py-1 text-[11px] font-semibold ml-1">
+              {currentStep + 1} / {steps.length}
+            </span>
+          </div>
+
+          {/* Hint Bar */}
+          <div className="bg-[#ece9fd] dark:bg-[#5b4fe8]/10 border-b border-[#5b4fe8]/20 border-l-[3px] border-l-[#5b4fe8] px-5 py-2 text-xs text-[#5b4fe8] dark:text-[#7b6cff] font-medium shrink-0">
+            <span dangerouslySetInnerHTML={{ __html: step?.label || '' }} />
+          </div>
+
+          {/* Body Grid */}
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_248px_1fr] min-h-0">
+            
+            {/* Graph Col */}
+            <div className="flex flex-col border-b lg:border-b-0 lg:border-r border-black/10 dark:border-white/10 bg-white dark:bg-[#14141f] relative overflow-hidden min-h-[250px]">
+              <div className="px-4 py-2.5 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">
+                <span className="text-[11px] font-bold text-[#1a1a2e] dark:text-[#e8e8f0] tracking-wider uppercase">Graph</span>
+                <div className="flex gap-1.5">
+                  <button className="bg-transparent border border-black/10 dark:border-white/10 rounded-md text-[#9898b4] text-[10px] px-2 py-1 hover:bg-[#ece9fd] hover:text-[#5b4fe8] transition-colors">⊕</button>
+                  <button className="bg-transparent border border-black/10 dark:border-white/10 rounded-md text-[#9898b4] text-[10px] px-2 py-1 hover:bg-[#ece9fd] hover:text-[#5b4fe8] transition-colors">⊖</button>
+                  <button onClick={() => setIsFullscreen(!isFullscreen)} className="bg-transparent border border-black/10 dark:border-white/10 rounded-md text-[#9898b4] text-[10px] px-2 py-1 hover:bg-[#ece9fd] hover:text-[#5b4fe8] transition-colors">⛶</button>
+                </div>
+              </div>
+              <div className="flex-1 relative overflow-hidden">
+                <GraphVisual nodes={step?.nodes || []} edges={step?.edges || []} isFullscreen={isFullscreen} onToggleFullscreen={() => setIsFullscreen(!isFullscreen)} />
+              </div>
+              <div className="border-t border-black/10 dark:border-white/10 px-4 py-2 flex gap-3.5 shrink-0">
+                <div className="flex items-center gap-1.5 text-[10px] text-[#9898b4]"><div className="w-2.5 h-2.5 rounded-full border-2 border-[#5b4fe8] bg-[#ece9fd] dark:bg-[#5b4fe8]/20"></div>current</div>
+                <div className="flex items-center gap-1.5 text-[10px] text-[#9898b4]"><div className="w-2.5 h-2.5 rounded-full border-2 border-[#22c98a] bg-[#e6faf3] dark:bg-[#22c98a]/20"></div>inserted</div>
+                <div className="flex items-center gap-1.5 text-[10px] text-[#9898b4]"><div className="w-2.5 h-2.5 rounded-full border-2 border-[#3d3d52] bg-[#2d2d3f]"></div>idle</div>
+              </div>
+            </div>
+
+            {/* Side Col (Vars + Stack) */}
+            <div className="flex flex-col border-b lg:border-b-0 lg:border-r border-black/10 dark:border-white/10 bg-white dark:bg-[#14141f] overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-black/10 dark:border-white/10 shrink-0">
+                <span className="text-[11px] font-bold text-[#1a1a2e] dark:text-[#e8e8f0] tracking-wider uppercase">Variables</span>
+              </div>
+              <div className="flex flex-col overflow-y-auto max-h-[150px] lg:max-h-none">
+                {Object.entries(step?.variables || {}).map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between px-4 py-2 border-b border-black/10 dark:border-white/10">
+                    <span className="text-[11px] text-[#5b4fe8] dark:text-[#7b6cff] font-medium">{k}</span>
+                    <span className="tutor-mono bg-[#ece9fd] dark:bg-[#5b4fe8]/20 text-[#5b4fe8] dark:text-[#7b6cff] border border-[#5b4fe8]/20 rounded-[5px] px-2.5 py-0.5 text-[11px] font-semibold min-w-[38px] text-center transition-colors">
+                      {String(v)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="px-4 py-2.5 border-t border-b border-black/10 dark:border-white/10 flex justify-between items-center shrink-0 mt-auto lg:mt-0">
+                <span className="text-[11px] font-bold text-[#1a1a2e] dark:text-[#e8e8f0] tracking-wider uppercase">Data Structures</span>
+              </div>
+              <div className="p-3 flex flex-col gap-1.5 flex-1 overflow-y-auto bg-[#f7f7fc] dark:bg-[#1c1c2a]">
+                 {dsArray.map((ds, i) => <DSVisual key={i} ds={ds} />)}
+                 {dsArray.length === 0 && <span className="text-xs text-[#9898b4] italic">Empty</span>}
+              </div>
+            </div>
+
+            {/* Code Col */}
+            <div className="flex flex-col bg-white dark:bg-[#14141f] overflow-hidden min-h-[250px]">
+              <div className="bg-[#f7f7fc] dark:bg-[#1c1c2a] border-b border-black/10 dark:border-white/10 px-3.5 py-2 flex items-center gap-2 shrink-0">
+                <div className="flex gap-1.5">
+                  <div className="w-[11px] h-[11px] rounded-full bg-[#ff5f57]"></div>
+                  <div className="w-[11px] h-[11px] rounded-full bg-[#febc2e]"></div>
+                  <div className="w-[11px] h-[11px] rounded-full bg-[#28c840]"></div>
+                </div>
+                <span className="text-[9px] text-[#9898b4] mx-1">●</span>
+                <span className="tutor-mono text-[11px] text-[#5c5c7a] dark:text-[#9898b0] font-medium ml-1">
+                  main.{data.code?.language === 'python' ? 'py' : 'js'}
+                </span>
+                <button onClick={() => onCodeUpdate?.(data.code?.lines.map(l => l.text).join('\n') || '', data.code?.language || 'javascript', step?.highlightLine)} className="ml-auto bg-[#5b4fe8] hover:bg-[#7b6ff0] text-white border-none rounded-lg px-3.5 py-1.5 text-[11px] font-bold flex items-center gap-1.5 transition-colors">
+                  <span className="w-0 h-0 border-y-[4px] border-y-transparent border-l-[7px] border-l-white inline-block"></span> Run Code
+                </button>
+              </div>
+              <div className="code-lines flex-1 overflow-y-auto py-2">
+                {data.code?.lines.map((line, i) => {
+                  const isActive = step?.highlightLine === line.lineIndex;
+                  return (
+                    <div key={i} className={`flex min-h-[26px] items-stretch whitespace-pre text-[12.5px] leading-[2] transition-colors ${isActive ? 'bg-[#f0eeff] dark:bg-[#5b4fe8]/10' : ''}`}>
+                      <span className={`tutor-mono w-[38px] text-right pr-2.5 text-[10px] leading-[2.6] shrink-0 select-none border-l-[3px] ${isActive ? 'border-[#5b4fe8] text-[#5b4fe8] dark:text-[#7b6cff]' : 'border-transparent text-[#9898b4]'}`}>
+                        {line.lineIndex + 1}
+                      </span>
+                      <span className="tutor-mono px-0.5 text-[#1a1a2e] dark:text-[#e8e8f0]">
+                        {line.text}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Statusbar */}
+          <div className="bg-[#f7f7fc] dark:bg-[#1c1c2a] border-t border-black/10 dark:border-white/10 px-5 py-1.5 flex items-center gap-3.5 shrink-0 text-[9px] text-[#9898b4] font-medium tracking-wider">
+            <span className="w-[5px] h-[5px] rounded-full bg-[#22c98a] inline-block"></span>
+            <span>{data.code?.language === 'python' ? 'Python 3.11' : 'Node.js'}</span>
+            <span className="w-[1px] h-[10px] bg-black/10 dark:bg-white/10 inline-block"></span>
+            <span>step {currentStep + 1}</span>
+            <span className="w-[1px] h-[10px] bg-black/10 dark:bg-white/10 inline-block"></span>
+            <span>{step?.nodes?.length || 0} nodes</span>
+          </div>
         </div>
       )}
 
       {/* Bottom row: complexity + comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-6xl mx-auto mt-4">
 
         {data.complexity && (
           <div className="bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
@@ -525,7 +529,7 @@ export function TutorView({ data, onCodeUpdate }: TutorViewProps) {
 
       {/* Quiz */}
       {data.quiz && (
-        <div className="bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/30 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/30 rounded-2xl overflow-hidden shadow-sm w-full max-w-6xl mx-auto mt-4">
           <div className="bg-indigo-100/50 dark:bg-indigo-500/10 px-5 py-3 border-b border-indigo-200/50 dark:border-indigo-500/20 flex items-center gap-2">
             <CheckCircle2 size={15} className="text-indigo-600 dark:text-indigo-400" />
             <h4 className="font-semibold text-indigo-900 dark:text-indigo-200 text-sm">Knowledge Check</h4>

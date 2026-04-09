@@ -73,15 +73,18 @@ interface ChatViewProps {
   messages: Message[];
   onSendMessage: (text: string, files?: File[]) => void;
   isLoading: boolean;
+  onStopResponse?: () => void;
+  onNewChat?: () => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   checkpoints: any[];
   onToggleCheckpoint: (id: number) => void;
 }
 
-export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggleDarkMode, checkpoints, onToggleCheckpoint }: ChatViewProps) {
+export function ChatView({ messages, onSendMessage, isLoading, onStopResponse, onNewChat, isDarkMode, toggleDarkMode, checkpoints, onToggleCheckpoint }: ChatViewProps) {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [editorCode, setEditorCode] = useState('');
   const [editorLanguage, setEditorLanguage] = useState('python');
   const [editorActiveLine, setEditorActiveLine] = useState<number | undefined>(undefined);
@@ -127,7 +130,7 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
     <div 
       className="flex flex-col md:flex-row h-[100dvh] w-full p-0 md:p-3 lg:p-4 font-sans overflow-hidden relative bg-[#fcfcfc] dark:bg-[#050505]"
     >
-      <Sidebar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      <Sidebar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} onNewChat={onNewChat} />
       
       <main className="flex-1 relative flex flex-col min-h-0 md:ml-2 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 z-10">
         <div className="flex-1 relative overflow-hidden min-h-0 flex flex-col bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] border-0 md:border border-white/80 dark:border-[#1a1a1a] shadow-2xl">
@@ -171,7 +174,7 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
                                 setEditorCode(code);
                                 setEditorLanguage(language);
                                 setEditorActiveLine(activeLine);
-                                setIsEditorOpen(true);
+                                // Removed automatic editor opening as requested
                               }}
                             />
                           ) : (
@@ -255,7 +258,7 @@ export function ChatView({ messages, onSendMessage, isLoading, isDarkMode, toggl
           </div>
           
           <div className="mt-auto max-w-3xl mx-auto w-full pb-2 px-2 md:px-0">
-            <InputArea onSubmit={onSendMessage} isLoading={isLoading} />
+            <InputArea onSubmit={onSendMessage} onStop={onStopResponse} isLoading={isLoading} />
           </div>
         </div>
         </div>

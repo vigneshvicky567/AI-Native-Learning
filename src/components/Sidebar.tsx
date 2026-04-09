@@ -4,16 +4,20 @@ import { Plus, Search, Compass, LayoutGrid, History, Moon, Sun, Settings } from 
 interface SidebarProps {
   isDarkMode?: boolean;
   toggleDarkMode?: () => void;
+  onNewChat?: () => void;
 }
 
-export function Sidebar({ isDarkMode, toggleDarkMode }: SidebarProps) {
+export function Sidebar({ isDarkMode, toggleDarkMode, onNewChat }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-[68px] hover:w-64 flex-col items-start py-4 z-20 bg-transparent transition-all duration-300 group overflow-hidden shrink-0">
         <div className="mb-8 px-[10px] w-full flex items-center">
           {/* New Chat Button */}
-          <button className="w-12 h-12 shrink-0 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-center text-white dark:text-gray-900 shadow-sm hover:bg-gray-800 dark:hover:bg-white transition-all duration-200">
+          <button 
+            onClick={onNewChat}
+            className="w-12 h-12 shrink-0 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-center text-white dark:text-gray-900 shadow-sm hover:bg-gray-800 dark:hover:bg-white transition-all duration-200"
+          >
             <Plus size={24} strokeWidth={2.5} />
           </button>
           <span className="ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium text-gray-900 dark:text-gray-100">New Chat</span>
@@ -77,7 +81,10 @@ export function Sidebar({ isDarkMode, toggleDarkMode }: SidebarProps) {
           <Compass size={24} strokeWidth={2.5} />
         </button>
         <div className="relative -top-5">
-          <button className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md hover:bg-blue-700 transition-all duration-200 border-4 border-gray-50 dark:border-gray-900">
+          <button 
+            onClick={onNewChat}
+            className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md hover:bg-blue-700 transition-all duration-200 border-4 border-gray-50 dark:border-gray-900"
+          >
             <Plus size={28} strokeWidth={2.5} />
           </button>
         </div>

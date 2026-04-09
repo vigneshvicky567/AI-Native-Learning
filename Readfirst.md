@@ -53,3 +53,9 @@ Lexi AI is an AI-native learning website dashboard inspired by a modern assistan
 - **Outcome**: Successfully gathered context about the app's functionality, its client-side limitations, and the planned backend architecture.
 - **Action**: Created this `Readfirst.md` file as requested by the user.
 - **Outcome**: The `Readfirst.md` file now exists and provides a comprehensive overview of the project, its working/non-working parts, and a brief description of every file.
+- **Action**: Removed the floating menu and integrated "Stop Response" and "New Chat" functionality into existing UI components (Sidebar and InputArea).
+- **Outcome**: Improved UI consistency and removed redundant buttons.
+- **Action**: Prevented the code editor from opening automatically when tutor data is updated.
+- **Outcome**: Resolved user complaint about the editor "popping up" unexpectedly.
+- **Action**: Implemented "Stop Response" functionality in the `PromptInputBox` by adding an `onStop` callback to the send button when in a loading state.
+- **Outcome**: Users can now cancel AI response generation directly from the input area.

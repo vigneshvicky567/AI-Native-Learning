@@ -65,9 +65,9 @@ export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0] }:
   }, [result]);
 
   return (
-    <div className="flex gap-3 h-full w-full p-3">
-      {/* Left: challenge panel — fixed width */}
-      <div className="w-[320px] shrink-0 h-full">
+    <div className="flex flex-col md:flex-row gap-3 h-full w-full p-3 overflow-y-auto md:overflow-hidden">
+      {/* Left: challenge panel — fixed width on desktop, full on mobile */}
+      <div className="w-full md:w-[320px] shrink-0 h-auto md:h-full">
         <ChallengePanel
           challenge={challenge}
           status={status}
@@ -82,7 +82,7 @@ export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0] }:
       </div>
 
       {/* Right: your existing CodeEditor, always visible */}
-      <div className="flex-1 h-full relative">
+      <div className="flex-1 h-[60vh] md:h-full relative min-h-[400px]">
         <CodeEditor
           isOpen={true}
           onClose={() => {}}        // no close in challenge mode
@@ -96,6 +96,7 @@ export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0] }:
           }}
           editorRef={editorRef}
           monacoRef={monacoRef}
+          inline={true}
         />
       </div>
     </div>

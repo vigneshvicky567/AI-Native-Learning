@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Nunito:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Nunito:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -60,3 +60,10 @@ html, body, #root {
 .monaco-active-line-gutter {
   border-left: 3px solid #818cf8 !important;
 }
+
+/* TutorView Specific Styles */
+.tutor-root { font-family: 'Plus Jakarta Sans', sans-serif; }
+.tutor-mono { font-family: 'JetBrains Mono', monospace; }
+.code-lines::-webkit-scrollbar { width: 3px; }
+.code-lines::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+.dark .code-lines::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }

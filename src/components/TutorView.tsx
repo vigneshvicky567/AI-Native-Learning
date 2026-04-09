@@ -92,10 +92,23 @@ const COMPLEXITY_WIDTHS: [RegExp, string][] = [
   [/o\(2\^n|n!/,    '100%'],
 ];
 
-function complexityWidth(tc: string): string {
+function getComplexityWidth(tc: string): string {
   const t = tc.toLowerCase().replace(/\s/g, '');
   for (const [re, w] of COMPLEXITY_WIDTHS) if (re.test(t)) return w;
   return '45%';
+}
+
+// ─── JSON Extractor ────────────────────────────────────────────────────────
+
+function extractJSON(text: string) {
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("Failed to parse JSON from AI response:", text);
+    return null;
+  }
 }
 
 // ─── DS Visual ────────────────────────────────────────────────────────────
@@ -320,16 +333,22 @@ export function TutorView({ data, onCodeUpdate, appMode, onModeChange }: TutorVi
     if (!challengeAnswer.trim()) return;
     setIsSubmittingChallenge(true);
     try {
-      const question = challenges[currentStep % challenges.length];
-      const prompt = `You are evaluating a learner's defence of their understanding of a BST insert step. 
-Question asked: ${question}
+      const currentCode = data.code?.lines.map(l => l.text).join('\n') || '';
+      const prompt = `You are evaluating a learner's defense of their understanding of an algorithm step.
+Algorithm: ${data.explanation || 'Unknown'}
+Current Step: ${step?.label || ''}
+Current Code Context:
+${currentCode}
+
+Generate a challenging question about this specific step and evaluate the learner's answer.
 Learner answer: ${challengeAnswer}
+
 Return JSON only, no markdown, no explanation outside JSON:
 {
-  correct_variable: true or false,
-  reasoning_valid: true or false,
-  limits_acknowledged: true or false,
-  feedback: 'exactly 2 sentences'
+  "correct_variable": boolean,
+  "reasoning_valid": boolean,
+  "limits_acknowledged": boolean,
+  "feedback": "exactly 2 sentences"
 }`;
 
       const response = await ai.models.generateContent({
@@ -340,8 +359,8 @@ Return JSON only, no markdown, no explanation outside JSON:
         }
       });
 
-      const result = JSON.parse(response.text);
-      setChallengeResult(result);
+      const result = extractJSON(response.text);
+      if (result) setChallengeResult(result);
     } catch (error) {
       console.error("Challenge evaluation error:", error);
     } finally {
@@ -400,10 +419,11 @@ Return JSON only, no markdown, no explanation outside JSON:
   }, [currentStep, steps.length, hasSteps, tokenUsedSteps.size]);
 
   // Resolve data structures for current step
-  const dsArray: DSState[] = step
-    ? step.dataStructures
-      ?? (step.dataStructure && step.dataStructure.type !== 'none' ? [step.dataStructure] : [])
-    : [];
+  const dsArray: DSState[] = React.useMemo(() => {
+    if (!step) return [];
+    return step.dataStructures
+      ?? (step.dataStructure && step.dataStructure.type !== 'none' ? [step.dataStructure] : []);
+  }, [step]);
 
   // ── Sync external code editor ─────────────────────────────────────────
   const onCodeUpdateRef = useRef(onCodeUpdate);
@@ -481,7 +501,23 @@ Return JSON only, no markdown, no explanation outside JSON:
     goTo(Math.round(pct * (steps.length - 1)));
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Main area ──────────────────────────────────────────────────────────
+  const codeLines = React.useMemo(() => {
+    return data.code?.lines.map((line, i) => {
+      const isActive = step?.highlightLine === line.lineIndex;
+      return (
+        <div key={i} className={`flex min-h-[26px] items-stretch whitespace-pre text-[12.5px] leading-[2] transition-colors ${isActive ? 'bg-[#f0eeff] dark:bg-[#5b4fe8]/10' : ''}`}>
+          <span className={`tutor-mono w-[38px] text-right pr-2.5 text-[10px] leading-[2.6] shrink-0 select-none border-l-[3px] ${isActive ? 'border-[#5b4fe8] text-[#5b4fe8] dark:text-[#7b6cff]' : 'border-transparent text-[#9898b4]'}`}>
+            {line.lineIndex + 1}
+          </span>
+          <span className="tutor-mono px-0.5 text-[#1a1a2e] dark:text-[#e8e8f0]">
+            {line.text}
+          </span>
+        </div>
+      );
+    }) || [];
+  }, [data.code?.lines, step?.highlightLine]);
+
   if (isMinimized) {
     return (
       <div className="w-full max-w-5xl mx-auto">
@@ -518,16 +554,8 @@ Return JSON only, no markdown, no explanation outside JSON:
 
       {/* Main area */}
       {hasSteps && step && (
-        <div className={`flex flex-col rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden min-h-[580px] bg-[#f0f0f8] dark:bg-[#0a0a0f] font-sans shadow-lg w-full max-w-6xl mx-auto ${isFullscreen ? 'fixed inset-4 z-50 shadow-2xl' : ''}`}>
-          <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-            .tutor-root { font-family: 'Plus Jakarta Sans', sans-serif; }
-            .tutor-mono { font-family: 'JetBrains Mono', monospace; }
-            .code-lines::-webkit-scrollbar { width: 3px; }
-            .code-lines::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
-            .dark .code-lines::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
-          `}</style>
-
+        <div className={`flex flex-col rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden min-h-[580px] bg-[#f0f0f8] dark:bg-[#0a0a0f] tutor-root shadow-lg w-full max-w-6xl mx-auto ${isFullscreen ? 'fixed inset-4 z-50 shadow-2xl' : ''}`}>
+          
           {/* Progress Bar */}
           <div className="relative h-[3px] bg-black/5 dark:bg-white/5 shrink-0">
             <div 
@@ -539,9 +567,9 @@ Return JSON only, no markdown, no explanation outside JSON:
           {/* Toolbar */}
           <div className="bg-white dark:bg-[#14141f] border-b border-black/10 dark:border-white/10 px-5 py-2.5 flex flex-wrap items-center gap-3 shrink-0">
             <div className="flex items-center gap-1">
-              <button onClick={() => setCurrentStep(0)} disabled={isFirst} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">«</button>
-              <button onClick={goPrev} disabled={isFirst} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">◀</button>
-              <button onClick={() => setIsPlaying(!isPlaying)} className="bg-[#5b4fe8] hover:bg-[#7b6ff0] border-none rounded-[10px] text-white text-xs px-3.5 py-1.5 font-semibold flex items-center gap-1.5 transition-colors">
+              <button onClick={() => setCurrentStep(0)} disabled={isFirst} aria-label="First step" className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">«</button>
+              <button onClick={goPrev} disabled={isFirst} aria-label="Previous step" className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">◀</button>
+              <button onClick={() => setIsPlaying(!isPlaying)} aria-label={isPlaying ? "Pause" : "Play"} className="bg-[#5b4fe8] hover:bg-[#7b6ff0] border-none rounded-[10px] text-white text-xs px-3.5 py-1.5 font-semibold flex items-center gap-1.5 transition-colors">
                 {isPlaying ? (
                   <span className="flex gap-[3px]"><span className="w-[3px] h-[10px] bg-white rounded-[1px]"></span><span className="w-[3px] h-[10px] bg-white rounded-[1px]"></span></span>
                 ) : (
@@ -549,8 +577,8 @@ Return JSON only, no markdown, no explanation outside JSON:
                 )}
                 {isPlaying ? 'pause' : 'play'}
               </button>
-              <button onClick={goNext} disabled={isLast} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">▶</button>
-              <button onClick={() => setCurrentStep(steps.length - 1)} disabled={isLast} className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">»</button>
+              <button onClick={goNext} disabled={isLast} aria-label="Next step" className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">▶</button>
+              <button onClick={() => setCurrentStep(steps.length - 1)} disabled={isLast} aria-label="Last step" className="bg-transparent border border-black/10 dark:border-white/10 rounded-lg text-[#5c5c7a] dark:text-[#9898b0] text-[11px] px-2.5 py-1.5 hover:bg-[#ece9fd] hover:text-[#5b4fe8] hover:border-[#5b4fe8]/30 dark:hover:bg-[#5b4fe8]/20 transition-all disabled:opacity-50">»</button>
             </div>
             
             <div className="flex gap-1">
@@ -729,19 +757,7 @@ Return JSON only, no markdown, no explanation outside JSON:
                 </button>
               </div>
               <div className="code-lines flex-1 overflow-y-auto py-2">
-                {data.code?.lines.map((line, i) => {
-                  const isActive = step?.highlightLine === line.lineIndex;
-                  return (
-                    <div key={i} className={`flex min-h-[26px] items-stretch whitespace-pre text-[12.5px] leading-[2] transition-colors ${isActive ? 'bg-[#f0eeff] dark:bg-[#5b4fe8]/10' : ''}`}>
-                      <span className={`tutor-mono w-[38px] text-right pr-2.5 text-[10px] leading-[2.6] shrink-0 select-none border-l-[3px] ${isActive ? 'border-[#5b4fe8] text-[#5b4fe8] dark:text-[#7b6cff]' : 'border-transparent text-[#9898b4]'}`}>
-                        {line.lineIndex + 1}
-                      </span>
-                      <span className="tutor-mono px-0.5 text-[#1a1a2e] dark:text-[#e8e8f0]">
-                        {line.text}
-                      </span>
-                    </div>
-                  );
-                })}
+                {codeLines}
               </div>
             </div>
 
@@ -776,7 +792,7 @@ Return JSON only, no markdown, no explanation outside JSON:
                 <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
-                      width: complexityWidth(data.complexity![k]),
+                      width: getComplexityWidth(data.complexity![k]),
                       backgroundColor: k === 'time' ? '#ef4444' : '#3b82f6'
                     }} />
                 </div>

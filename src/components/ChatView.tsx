@@ -163,7 +163,7 @@ export function ChatView({
     // const response = await fetch('http://localhost:8000/api/code/execute', {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ code, language })
+    //   body: JSON.stringify({ code, language, appMode })
     // });
     // const result = await response.json();
     // Then, you can either display the result in the editor or send it to Gemini for review.

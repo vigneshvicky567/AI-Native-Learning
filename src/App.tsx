@@ -118,6 +118,23 @@ export default function App() {
     setMessages(prev => [...prev, newUserMsg]);
     setIsLoading(true);
 
+    // BACKEND ARCHITECTURE: Replace the entire Gemini SDK logic below with a call to your FastAPI backend.
+    // Example:
+    // const response = await fetch('http://localhost:8000/api/chat/message', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ 
+    //     session_id: "current-session-id",
+    //     message: processedText, 
+    //     appMode: appMode,
+    //     files: await Promise.all(files.map(async f => ({
+    //       mime_type: f.type,
+    //       data: await fileToBase64(f)
+    //     })))
+    //   })
+    // });
+    // ... handle SSE streaming response to update messages ...
+
     try {
       const fileToGenerativePart = async (file: File) => {
         const base64EncodedDataPromise = new Promise<string>((resolve) => {
@@ -612,6 +629,8 @@ compare visually / live demo / side by side?
           toggleDarkMode={toggleDarkMode}
           checkpoints={checkpoints}
           onToggleCheckpoint={(id) => {
+            // BACKEND ARCHITECTURE: Send a PUT request to /api/progress/{id} to update the completion status
+            // fetch(\`/api/progress/\${id}\`, { method: 'PUT', body: JSON.stringify({ completed: !checkpoints.find(c => c.id === id)?.completed }) });
             setCheckpoints(prev => prev.map(c => c.id === id ? { ...c, completed: !c.completed } : c));
           }}
           appMode={appMode}

@@ -376,6 +376,8 @@ Return ONLY a JSON object matching this interface:
 
   const handleUseToken = () => {
     if (tokens > 0) {
+      // BACKEND ARCHITECTURE: Send a POST request to /api/user/use-token to deduct a token
+      // fetch('/api/user/use-token', { method: 'POST' });
       const newTokens = tokens - 1;
       setTokens(newTokens);
       setTokenUsedSteps(prev => new Set(prev).add(currentStep));
@@ -684,6 +686,8 @@ Return ONLY a JSON object matching this interface:
                   challenge={currentChallenge || CHALLENGES[currentStep % CHALLENGES.length]}
                   onClose={() => setShowChallenge(false)}
                   onSuccess={() => {
+                    // BACKEND ARCHITECTURE: Send a POST request to /api/user/complete-challenge to mark the step as completed
+                    // fetch('/api/user/complete-challenge', { method: 'POST', body: JSON.stringify({ step: currentStep }) });
                     setIsChallengePassed(true);
                     setDefendedSteps(prev => new Set(prev).add(currentStep));
                     setShowChallenge(false);

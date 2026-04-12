@@ -32,6 +32,7 @@ Currently, `App.tsx` uses `@google/genai` to stream responses directly. You shou
   {
     "session_id": "uuid-string",
     "message": "Explain quicksort",
+    "appMode": "deep-work",
     "files": [
       { "mime_type": "image/png", "data": "base64_string..." }
     ]
@@ -63,7 +64,8 @@ Currently, the "Run Code" button just sends a prompt to Gemini asking it to *sim
   ```json
   {
     "language": "python",
-    "code": "print('Hello World')"
+    "code": "print('Hello World')",
+    "appMode": "deep-work"
   }
   ```
 * **Response**:
@@ -76,7 +78,7 @@ Currently, the "Run Code" button just sends a prompt to Gemini asking it to *sim
   ```
 
 ### 4. Checkpoints / Progress Tracking
-Currently, the tasks in `ChecklistSidebar.tsx` are hardcoded.
+Currently, the tasks in `ChecklistSidebar.tsx` are hardcoded or managed in state.
 
 * **Endpoint**: `GET /api/progress`
 * **Description**: Fetches the user's current learning checkpoints.
@@ -93,6 +95,26 @@ Currently, the tasks in `ChecklistSidebar.tsx` are hardcoded.
 * **Endpoint**: `PUT /api/progress/{task_id}`
 * **Description**: Toggles the completion status of a specific task.
 * **Request Body**: `{ "completed": true }`
+
+### 5. Fast-Pass Tokens & Challenge System
+Currently, tokens and defended steps are managed in local state.
+
+* **Endpoint**: `GET /api/user/status`
+* **Description**: Fetches the user's available Fast-Pass tokens and completed challenges.
+* **Response**:
+  ```json
+  {
+    "tokens": 3,
+    "defendedSteps": [0, 1]
+  }
+  ```
+
+* **Endpoint**: `POST /api/user/use-token`
+* **Description**: Deducts a Fast-Pass token from the user's account.
+
+* **Endpoint**: `POST /api/user/complete-challenge`
+* **Description**: Marks a specific step's challenge as completed.
+* **Request Body**: `{ "step": 2 }`
 
 ## Next Steps for the Frontend
 I have added comments throughout your React codebase (look for `// BACKEND ARCHITECTURE:`) to show exactly where you need to swap out the current logic for `fetch()` calls to your new FastAPI endpoints.

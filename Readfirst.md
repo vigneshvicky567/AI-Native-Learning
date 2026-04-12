@@ -60,3 +60,9 @@ Lexi AI is an AI-native learning website dashboard inspired by a modern assistan
   - **Educational Context**: Replaced static BST questions with context-aware AI challenges based on the current algorithm step.
   - **Accessibility**: Added `aria-label` to all symbol-only buttons for screen reader support.
   - **Render Waste**: Memoized expensive array transformations and code rendering using `useMemo`.
+- **Action**: Enabled simultaneous mode toggling (Learn, Think, Canvas).
+- **Outcome**: Users can now activate multiple modes at once (e.g., "Think" and "Learn" together) for a more powerful and tailored learning experience. Updated both UI toggles and backend tag parsing.
+- **Action**: Fixed Challenge Mode to generate context-aware coding challenges.
+- **Outcome**: Replaced static, unrelated challenges (like "Reverse a string") with dynamically generated coding challenges based on the user's current algorithm step and code context. Cleaned up dead code from the old text-based challenge system and added error handling to the challenge checker.
+- **Action**: Updated system prompt and parsing logic to support multi-modal responses.
+- **Outcome**: The AI can now combine text explanations, interactive HTML widgets (like flowcharts or diagrams), and step-by-step JSON walkthroughs in a single response, rather than being restricted to exactly one mode per turn. Updated `ChatView` to render both text/visual blocks and the `TutorView` simultaneously if both are present.

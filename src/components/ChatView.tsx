@@ -135,13 +135,17 @@ export function ChatView({
   useEffect(() => {
     if (scrollContainerRef.current) {
       const scrollContainer = scrollContainerRef.current;
-      // Use requestAnimationFrame to ensure DOM has updated before scrolling
-      requestAnimationFrame(() => {
-        scrollContainer.scrollTo({
-          top: scrollContainer.scrollHeight,
-          behavior: 'smooth'
+      // Only auto-scroll if we are already near the bottom, or if it's a new message
+      const isNearBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 150;
+      
+      if (isNearBottom) {
+        requestAnimationFrame(() => {
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollHeight,
+            behavior: 'smooth'
+          });
         });
-      });
+      }
     }
   }, [messages]);
 
@@ -219,24 +223,13 @@ export function ChatView({
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] py-4 ${msg.role === 'user' ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-900 dark:text-indigo-100 rounded-3xl px-6 shadow-sm border border-indigo-100 dark:border-indigo-500/20' : 'bg-transparent text-gray-900 dark:text-gray-100 px-2'}`}>
                         {msg.role === 'model' ? (
-                          msg.tutorData ? (
-                            <TutorView 
-                              data={msg.tutorData} 
-                              onCodeUpdate={(code, language, activeLine) => {
-                                setEditorCode(code);
-                                setEditorLanguage(language);
-                                setEditorActiveLine(activeLine);
-                                // Removed automatic editor opening as requested
-                              }}
-                              appMode={appMode}
-                              onModeChange={onModeChange}
-                            />
-                          ) : (
-                            <div className="flex flex-col gap-4">
-                              {parseResponse(msg.text).map((part, i) => 
-                                part.type === "visual" ? (
-                                  <VisualFrame key={i} html={part.content} />
-                                ) : (
+                          <div className="flex flex-col gap-4">
+                            {/* Render text and visual blocks, stripping out the JSON block intended for TutorView */}
+                            {msg.text && parseResponse(msg.text.replace(/```json[\s\S]*?(```|$)/gi, '')).map((part, i) => 
+                              part.type === "visual" ? (
+                                <VisualFrame key={i} html={part.content} />
+                              ) : (
+                                part.content.trim() && (
                                   <div key={i} className="markdown-body prose prose-sm max-w-none font-sans text-gray-900 dark:text-gray-100">
                                     <ReactMarkdown
                                       remarkPlugins={[remarkGfm, remarkMath]}
@@ -276,9 +269,53 @@ export function ChatView({
                                     </ReactMarkdown>
                                   </div>
                                 )
-                              )}
-                            </div>
-                          )
+                              )
+                            )}
+                            
+                            {/* Render TutorView if data exists, or skeleton while loading */}
+                            {msg.tutorData ? (
+                              <TutorView 
+                                data={msg.tutorData} 
+                                onCodeUpdate={(code, language, activeLine) => {
+                                  setEditorCode(code);
+                                  setEditorLanguage(language);
+                                  setEditorActiveLine(activeLine);
+                                }}
+                                appMode={appMode}
+                                onModeChange={onModeChange}
+                              />
+                            ) : (isLoading && idx === messages.length - 1 && msg.text.toLowerCase().includes('```json')) ? (
+                              <div className="w-full mt-4 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 bg-white dark:bg-[#0a0a0a] shadow-sm">
+                                <div className="animate-pulse flex flex-col gap-4">
+                                  {/* Header Skeleton */}
+                                  <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                                      <div className="w-32 h-4 rounded bg-gray-200 dark:bg-gray-800"></div>
+                                    </div>
+                                    <div className="w-24 h-6 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                                  </div>
+                                  {/* Content Skeleton */}
+                                  <div className="flex gap-4 h-[300px]">
+                                    {/* Left Panel */}
+                                    <div className="flex-1 rounded-xl bg-gray-100 dark:bg-gray-800/50 p-4">
+                                      <div className="w-full h-full rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+                                    </div>
+                                    {/* Right Panel */}
+                                    <div className="w-1/3 flex flex-col gap-3">
+                                      <div className="w-full h-1/2 rounded-xl bg-gray-100 dark:bg-gray-800/50 p-4">
+                                        <div className="w-3/4 h-4 rounded bg-gray-200 dark:bg-gray-800 mb-2"></div>
+                                        <div className="w-1/2 h-4 rounded bg-gray-200 dark:bg-gray-800"></div>
+                                      </div>
+                                      <div className="w-full h-1/2 rounded-xl bg-gray-100 dark:bg-gray-800/50 p-4">
+                                        <div className="w-full h-full rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
                         ) : (
                           <div className="flex flex-col gap-2">
                             {msg.files && msg.files.length > 0 && (
@@ -304,7 +341,48 @@ export function ChatView({
                 {isLoading && (messages.length === 0 || messages[messages.length - 1].role === 'user' || (messages[messages.length - 1].role === 'model' && messages[messages.length - 1].text === '')) && (
                   <div className="flex justify-start">
                     <div className="bg-transparent px-2 py-4 flex items-center gap-2">
-                      <LoadingBreadcrumb text="Thinking" />
+                      <LoadingBreadcrumb texts={[
+                        "Thinking",
+                        "Processing your brilliance",
+                        "Crunching the numbers",
+                        "Connecting the dots",
+                        "Running a quick simulation",
+                        "Calibrating thoughts",
+                        "Checking all the angles",
+                        "Mapping the possibilities",
+                        "Organizing the chaos",
+                        "Warming up the brain cells",
+                        "Consulting the inner oracle",
+                        "Aligning the logic circuits",
+                        "Gathering insights",
+                        "Piecing things together",
+                        "Evaluating options",
+                        "Taking a smart guess",
+                        "Rewriting the playbook",
+                        "Doing a quick sanity check",
+                        "Running through scenarios",
+                        "Optimizing the answer",
+                        "Debugging my thoughts",
+                        "Loading clever ideas",
+                        "Syncing with common sense",
+                        "Double-checking assumptions",
+                        "Thinking outside the box",
+                        "Thinking inside the box (just in case)",
+                        "Sharpening the answer",
+                        "Asking the smarter version of me",
+                        "Turning coffee into logic",
+                        "Figuring out which way is north",
+                        "Noodling",
+                        "Asking the older timer for advice",
+                        "Searching the mental archives",
+                        "Untangling the problem",
+                        "Finding the cleanest path",
+                        "Building the answer step by step",
+                        "Checking for plot holes",
+                        "Translating thoughts into clarity",
+                        "Making it make sense",
+                        "Almost there… refining the final answer"
+                      ]} />
                     </div>
                   </div>
                 )}

@@ -8,7 +8,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { CHALLENGES } from '../data/challenges';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 import {
   Play, Pause, SkipBack, SkipForward, ChevronsLeft, ChevronsRight,
@@ -307,14 +307,8 @@ export function TutorView({ data, onCodeUpdate, appMode, onModeChange }: TutorVi
 
   // Challenge State
   const [showChallenge, setShowChallenge] = useState(false);
-  const [challengeAnswer, setChallengeAnswer] = useState("");
-  const [isSubmittingChallenge, setIsSubmittingChallenge] = useState(false);
-  const [challengeResult, setChallengeResult] = useState<{
-    correct_variable: boolean;
-    reasoning_valid: boolean;
-    limits_acknowledged: boolean;
-    feedback: string;
-  } | null>(null);
+  const [currentChallenge, setCurrentChallenge] = useState<any>(null);
+  const [isGeneratingChallenge, setIsGeneratingChallenge] = useState(false);
   const [isChallengePassed, setIsChallengePassed] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -329,30 +323,36 @@ export function TutorView({ data, onCodeUpdate, appMode, onModeChange }: TutorVi
   const progress = hasSteps ? ((currentStep) / (steps.length - 1)) * 100 : 0;
 
   // ── Gemini API for Challenge ───────────────────────────────────────────
-  const handleChallengeSubmit = async () => {
-    if (!challengeAnswer.trim()) return;
-    setIsSubmittingChallenge(true);
+  const handleTakeChallenge = async () => {
+    setShowSkipPanel(false);
+    setIsGeneratingChallenge(true);
     try {
       const currentCode = data.code?.lines.map(l => l.text).join('\n') || '';
-      const prompt = `You are evaluating a learner's defense of their understanding of an algorithm step.
+      const language = data.code?.language || 'python';
+      const prompt = `You are an expert computer science tutor. Create a short, focused coding challenge to test the user's understanding of the current step in the algorithm they are learning.
+
 Algorithm: ${data.explanation || 'Unknown'}
 Current Step: ${step?.label || ''}
 Current Code Context:
 ${currentCode}
 
-Generate a challenging question about this specific step and evaluate the learner's answer.
-Learner answer: ${challengeAnswer}
-
-Return JSON only, no markdown, no explanation outside JSON:
+Generate a coding challenge that asks the user to implement a small part of this step, or a related concept.
+Return ONLY a JSON object matching this interface:
 {
-  "correct_variable": boolean,
-  "reasoning_valid": boolean,
-  "limits_acknowledged": boolean,
-  "feedback": "exactly 2 sentences"
+  "id": "dynamic-challenge",
+  "title": "string (short title)",
+  "difficulty": "intermediate",
+  "language": "${language}",
+  "prompt": "string (markdown allowed, explain the task clearly)",
+  "starterCode": "string (provide the function signature and any necessary setup)",
+  "testCases": [
+    { "input": "string", "expectedOutput": "string", "isHidden": false }
+  ],
+  "hints": ["string (1-2 hints)"]
 }`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -360,20 +360,18 @@ Return JSON only, no markdown, no explanation outside JSON:
       });
 
       const result = extractJSON(response.text);
-      if (result) setChallengeResult(result);
+      if (result && result.title && result.starterCode) {
+        setCurrentChallenge(result);
+      } else {
+        setCurrentChallenge(CHALLENGES[currentStep % CHALLENGES.length]);
+      }
     } catch (error) {
-      console.error("Challenge evaluation error:", error);
+      console.error("Challenge generation error:", error);
+      setCurrentChallenge(CHALLENGES[currentStep % CHALLENGES.length]);
     } finally {
-      setIsSubmittingChallenge(false);
+      setIsGeneratingChallenge(false);
+      setShowChallenge(true);
     }
-  };
-
-  const handleContinue = () => {
-    setShowChallenge(false);
-    setChallengeAnswer("");
-    setChallengeResult(null);
-    setIsChallengePassed(true);
-    setDefendedSteps(prev => new Set(prev).add(currentStep));
   };
 
   const handleUseToken = () => {
@@ -388,16 +386,10 @@ Return JSON only, no markdown, no explanation outside JSON:
     }
   };
 
-  const handleTakeChallenge = () => {
-    setShowSkipPanel(false);
-    setShowChallenge(true);
-  };
-
   // Reset challenge state when step changes
   useEffect(() => {
     setShowChallenge(false);
-    setChallengeAnswer("");
-    setChallengeResult(null);
+    setCurrentChallenge(null);
     setIsChallengePassed(defendedSteps.has(currentStep));
     setShowSkipPanel(false);
   }, [currentStep, defendedSteps]);
@@ -536,15 +528,6 @@ Return JSON only, no markdown, no explanation outside JSON:
   return (
     <div ref={containerRef} className="flex flex-col gap-6 w-full max-w-5xl mx-auto text-gray-900 dark:text-slate-200 relative">
       
-      {/* Close/Minimize Button */}
-      <button 
-        onClick={() => setIsMinimized(true)}
-        className="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-slate-800 border border-black/10 dark:border-white/10 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-500/30 shadow-md z-[60] transition-all group"
-        title="Close Visualizer"
-      >
-        <X size={16} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform" />
-      </button>
-
       {/* Note banner */}
       {data.note && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/30 rounded-xl px-4 py-2.5 text-sm text-blue-700 dark:text-blue-300">
@@ -622,6 +605,18 @@ Return JSON only, no markdown, no explanation outside JSON:
                 ))}
               </div>
             </div>
+
+            {/* Close Button */}
+            <button 
+              onClick={() => {
+                setIsFullscreen(false);
+                setIsMinimized(true);
+              }}
+              className="ml-2 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+              title="Close Visualizer"
+            >
+              <X size={16} strokeWidth={2.5} />
+            </button>
           </div>
 
           {/* Hint Bar */}
@@ -631,66 +626,74 @@ Return JSON only, no markdown, no explanation outside JSON:
             </ReactMarkdown>
           </div>
 
-          {/* Fast-Pass Skip Panel */}
-          {appMode === 'deep-work' && showSkipPanel && (
-            <div className="px-5 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-1">
-              <span className="text-sm text-indigo-900 dark:text-indigo-200 font-medium">
-                Skip the challenge? Use a Fast-Pass.
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleUseToken}
-                  disabled={tokens === 0}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    tokens > 0 
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  Use token ({tokens} left)
-                </button>
-                <button
-                  onClick={handleTakeChallenge}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-all"
-                >
-                  Take the challenge
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Challenge Available / Fast-Pass Banner */}
+          <AnimatePresence>
+            {appMode === 'deep-work' && !showChallenge && !isChallengePassed && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="px-5 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between overflow-hidden shrink-0"
+              >
+                <div className="flex items-center gap-2">
+                  <BrainCircuit className="text-indigo-600 w-5 h-5" />
+                  <span className="text-sm text-indigo-900 dark:text-indigo-200 font-medium">
+                    {currentStep > 0 && !defendedSteps.has(currentStep) 
+                      ? "Skip the challenge? Use a Fast-Pass." 
+                      : "Challenge available for this step"}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {currentStep > 0 && !defendedSteps.has(currentStep) && (
+                    <button
+                      onClick={handleUseToken}
+                      disabled={tokens === 0}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        tokens > 0 
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      Use token ({tokens} left)
+                    </button>
+                  )}
+                  <button
+                    onClick={handleTakeChallenge}
+                    disabled={isGeneratingChallenge}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-all disabled:opacity-50"
+                  >
+                    {isGeneratingChallenge ? 'Generating...' : 'Take Challenge'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Challenge System */}
-          {appMode === 'deep-work' && showChallenge && (
-            <div className="fixed inset-0 z-[100] bg-white dark:bg-[#050505] animate-in fade-in zoom-in-95 duration-300">
-              <ChallengeMode 
-                isDarkMode={document.documentElement.classList.contains('dark')}
-                challenge={CHALLENGES[currentStep % CHALLENGES.length]}
-                onClose={() => setShowChallenge(false)}
-                onSuccess={() => {
-                  setIsChallengePassed(true);
-                  setDefendedSteps(prev => new Set(prev).add(currentStep));
-                  setShowChallenge(false);
-                  setShowToast(true);
-                  setTimeout(() => setShowToast(false), 3000);
-                }}
-              />
-            </div>
-          )}
-
-          {appMode === 'deep-work' && !showChallenge && !isChallengePassed && (
-            <div className="px-5 py-3 bg-white dark:bg-[#14141f] border-b border-black/5 dark:border-white/5 shrink-0 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BrainCircuit className="text-indigo-600 w-5 h-5" />
-                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Challenge available for this step</span>
-              </div>
-              <button
-                onClick={() => setShowChallenge(true)}
-                className="bg-indigo-600 text-white rounded-lg px-4 py-1.5 text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+          <AnimatePresence>
+            {appMode === 'deep-work' && showChallenge && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[100] bg-white dark:bg-[#050505]"
               >
-                Take Challenge
-              </button>
-            </div>
-          )}
+                <ChallengeMode 
+                  isDarkMode={document.documentElement.classList.contains('dark')}
+                  challenge={currentChallenge || CHALLENGES[currentStep % CHALLENGES.length]}
+                  onClose={() => setShowChallenge(false)}
+                  onSuccess={() => {
+                    setIsChallengePassed(true);
+                    setDefendedSteps(prev => new Set(prev).add(currentStep));
+                    setShowChallenge(false);
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 3000);
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Body Grid */}
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_248px_1fr] min-h-0">

@@ -75,20 +75,36 @@ export default function App() {
     let isThink = false;
     let cleanText = text;
 
+    // Handle new multi-mode tags
+    if (text.includes('[Think]')) {
+      isThink = true;
+      targetModel = 'gemini-3.1-pro-preview';
+      cleanText = cleanText.replace('[Think]', '');
+    }
+    if (text.includes('[Learn]')) {
+      isLearn = true;
+      cleanText = cleanText.replace('[Learn]', '');
+    }
+    if (text.includes('[Canvas]')) {
+      isCanvas = true;
+      cleanText = cleanText.replace('[Canvas]', '');
+    }
+
+    // Handle legacy single-mode tags
     if (text.startsWith('[Think: ')) {
       isThink = true;
       targetModel = 'gemini-3.1-pro-preview';
-      processedText = text.substring(8, text.length - 1);
-      cleanText = processedText;
+      cleanText = text.substring(8, text.length - 1);
     } else if (text.startsWith('[Canvas: ')) {
       isCanvas = true;
-      processedText = text.substring(9, text.length - 1);
-      cleanText = processedText;
+      cleanText = text.substring(9, text.length - 1);
     } else if (text.startsWith('[Learn: ')) {
       isLearn = true;
-      processedText = text.substring(8, text.length - 1);
-      cleanText = processedText;
+      cleanText = text.substring(8, text.length - 1);
     }
+
+    cleanText = cleanText.trim();
+    processedText = cleanText;
 
     const newUserMsg: Message = { 
       role: 'user', 
@@ -152,7 +168,7 @@ export default function App() {
 
       setMessages(prev => [...prev, { role: 'model', text: '' }]);
       
-      const systemInstruction = `# CS Algorithm Tutor — System Prompt (v3)
+      const systemInstruction = `# CS Algorithm Tutor — System Prompt (v4)
 
 You are a competitive-programming-level CS tutor specializing in algorithms and data structures. You teach with strong intuition, zero fluff, and visually precise walkthroughs. Maintain this persona across every turn — never revert to generic assistant behavior.
 
@@ -162,18 +178,18 @@ Adapt to the student:
 
 ---
 
-## RESPONSE MODES — Choose EXACTLY ONE
+## RESPONSE CAPABILITIES
+
+You have three main ways to explain concepts. You can use them individually OR combine them in a single response to create a rich, multi-modal explanation.
 
 ---
 
-### MODE 1 · Step-by-Step Graph Tutor (STRICT JSON)
+### CAPABILITY 1 · Step-by-Step Graph Tutor (JSON)
 
 **Trigger on:** "show steps" · "visualize" · "dry run" · "trace" · "walk me through" · "step by step" · "execute" · "simulate"
 
-Return **exactly one** raw valid JSON object.
-- No markdown before or after
-- No code fences wrapping the JSON
-- Must pass \`JSON.parse()\` with zero errors
+Return **exactly one** valid JSON object wrapped in \`\`\`json ... \`\`\` markdown fences.
+- Must pass \`JSON.parse()\` with zero errors.
 
 ---
 
@@ -353,7 +369,7 @@ Before outputting, internally verify all of the following. If **any** check fail
 
 #### Fallback Rule
 
-If the problem is too large or complex to produce complete valid JSON → switch to MODE 3 and say:
+If the problem is too large or complex to produce complete valid JSON → switch to CAPABILITY 3 and say:
 
 > *"This problem is too complex to fully step through here. Here's a conceptual explanation instead:"*
 
@@ -495,19 +511,38 @@ compare visually / live demo / side by side?
             
             let parsedData = null;
             
-            // Only try to parse JSON if it doesn't look like a <visual> response
-            if (!fullText.includes('<visual>')) {
-              const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-              if (jsonMatch) {
+            // Try to extract JSON from markdown fences first
+            const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/) || fullText.match(/```json\s*([\s\S]*?)$/);
+            
+            if (jsonMatch) {
+              const jsonString = jsonMatch[1];
+              try {
+                parsedData = JSON.parse(jsonString);
+              } catch (e) {
+                // Try partial parsing
+                try { parsedData = JSON.parse(jsonString + '}'); } catch (e2) {
+                  try { parsedData = JSON.parse(jsonString + ']}'); } catch (e3) {
+                    try { parsedData = JSON.parse(jsonString + '}]}'); } catch (e4) {
+                      try { parsedData = JSON.parse(jsonString + '"]}]}'); } catch (e5) {
+                        try { parsedData = JSON.parse(jsonString + '"]}}'); } catch (e6) {}
+                      }
+                    }
+                  }
+                }
+              }
+            } else if (!fullText.includes('<visual>')) {
+              // Legacy fallback for raw JSON without fences
+              const rawJsonMatch = fullText.match(/^\{[\s\S]*\}$/);
+              if (rawJsonMatch) {
                 try {
-                  parsedData = JSON.parse(jsonMatch[0]);
+                  parsedData = JSON.parse(rawJsonMatch[0]);
                 } catch (e) {
                   // Try partial parsing
-                  try { parsedData = JSON.parse(jsonMatch[0] + '}'); } catch (e2) {
-                    try { parsedData = JSON.parse(jsonMatch[0] + ']}'); } catch (e3) {
-                      try { parsedData = JSON.parse(jsonMatch[0] + '}]}'); } catch (e4) {
-                        try { parsedData = JSON.parse(jsonMatch[0] + '"]}]}'); } catch (e5) {
-                          try { parsedData = JSON.parse(jsonMatch[0] + '"]}}'); } catch (e6) {}
+                  try { parsedData = JSON.parse(rawJsonMatch[0] + '}'); } catch (e2) {
+                    try { parsedData = JSON.parse(rawJsonMatch[0] + ']}'); } catch (e3) {
+                      try { parsedData = JSON.parse(rawJsonMatch[0] + '}]}'); } catch (e4) {
+                        try { parsedData = JSON.parse(rawJsonMatch[0] + '"]}]}'); } catch (e5) {
+                          try { parsedData = JSON.parse(rawJsonMatch[0] + '"]}}'); } catch (e6) {}
                         }
                       }
                     }

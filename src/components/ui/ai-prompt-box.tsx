@@ -460,19 +460,13 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
   const handleToggleChange = (value: string) => {
     if (value === "learn") {
       setShowLearn((prev) => !prev);
-      setShowThink(false);
-      setShowCanvas(false);
     } else if (value === "think") {
       setShowThink((prev) => !prev);
-      setShowLearn(false);
-      setShowCanvas(false);
     }
   };
 
   const handleCanvasToggle = () => {
     setShowCanvas((prev) => !prev);
-    setShowLearn(false);
-    setShowThink(false);
   };
 
   const processFile = (file: File) => {
@@ -542,10 +536,11 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
   const handleSubmit = () => {
     if (input.trim() || files.length > 0) {
       let messagePrefix = "";
-      if (showLearn) messagePrefix = "[Learn: ";
-      else if (showThink) messagePrefix = "[Think: ";
-      else if (showCanvas) messagePrefix = "[Canvas: ";
-      const formattedInput = messagePrefix ? `${messagePrefix}${input}]` : input;
+      if (showThink) messagePrefix += "[Think]";
+      if (showLearn) messagePrefix += "[Learn]";
+      if (showCanvas) messagePrefix += "[Canvas]";
+      
+      const formattedInput = messagePrefix ? `${messagePrefix} ${input}` : input;
       onSend(formattedInput, files);
       setInput("");
       setFiles([]);

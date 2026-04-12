@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Trophy, ChevronRight, Lightbulb, RotateCcw,
-  CheckCircle2, XCircle, Clock, Zap, Eye, EyeOff
+  CheckCircle2, XCircle, Clock, Zap, Eye, EyeOff, X
 } from 'lucide-react';
 import type { Challenge, ChallengeStatus, CheckResult } from '../types/challenge';
 
@@ -15,11 +15,13 @@ interface ChallengePanelProps {
   onSubmit: () => void;
   onReset: () => void;
   onApplyFix?: (code: string) => void;
+  onClose?: () => void;
+  className?: string;
 }
 
 export function ChallengePanel({
   challenge, status, result, isChecking, isDarkMode = false,
-  onStart, onSubmit, onReset, onApplyFix
+  onStart, onSubmit, onReset, onApplyFix, onClose, className
 }: ChallengePanelProps) {
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [elapsed, setElapsed] = useState(0);
@@ -49,7 +51,7 @@ export function ChallengePanel({
   const surface = isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-gray-50 border-gray-200';
 
   return (
-    <div className={`flex flex-col h-full rounded-2xl border overflow-hidden backdrop-blur-xl ${base}`}>
+    <div className={`flex flex-col h-full rounded-2xl border overflow-hidden backdrop-blur-xl ${base} ${className || ''}`}>
 
       {/* Header */}
       <div className={`px-5 py-4 border-b flex items-start justify-between gap-3 shrink-0 ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
@@ -65,12 +67,23 @@ export function ChallengePanel({
           <h2 className="text-[15px] font-semibold leading-snug truncate">{challenge.title}</h2>
         </div>
 
-        {status === 'active' && (
-          <div className={`flex items-center gap-1.5 text-sm font-mono shrink-0 px-3 py-1.5 rounded-lg border ${isDarkMode ? 'border-gray-700 bg-gray-800 text-gray-300' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-            <Clock size={13} />
-            {formatTime(elapsed)}
-          </div>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {status === 'active' && (
+            <div className={`flex items-center gap-1.5 text-sm font-mono px-3 py-1.5 rounded-lg border ${isDarkMode ? 'border-gray-700 bg-gray-800 text-gray-300' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+              <Clock size={13} />
+              {formatTime(elapsed)}
+            </div>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+              title="Exit Challenge"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Body — scrollable */}

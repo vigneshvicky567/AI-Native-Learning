@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { ChallengePanel } from './ChallengePanel';
 import { CodeEditor } from './CodeEditor';
 import { useChallengeChecker } from '../hooks/useChallengeChecker';
@@ -36,8 +35,12 @@ export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0], o
   const handleSubmit = useCallback(async () => {
     setStatus('checking');
     const res = await checkSolution(challenge, code);
-    if (res) setStatus('result');
-    else setStatus('active'); // fallback on network error
+    if (res) {
+      setStatus('result');
+    } else {
+      setStatus('active'); // fallback on network error
+      alert("Failed to check solution. Please try again.");
+    }
   }, [challenge, code, checkSolution]);
 
   const handleReset = useCallback(() => {
@@ -76,29 +79,19 @@ export function ChallengeMode({ isDarkMode = false, challenge = CHALLENGES[0], o
 
   return (
     <div className="flex flex-col md:flex-row gap-3 h-full w-full p-3 overflow-y-auto md:overflow-hidden relative">
-      {onClose && (
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
-          title="Exit Challenge"
-        >
-          <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        </button>
-      )}
-      {/* Left: challenge panel — fixed width on desktop, full on mobile */}
-      <div className="w-full md:w-[320px] shrink-0 h-auto md:h-full">
-        <ChallengePanel
-          challenge={challenge}
-          status={status}
-          result={result}
-          isChecking={isChecking}
-          isDarkMode={isDarkMode}
-          onStart={handleStart}
-          onSubmit={handleSubmit}
-          onReset={handleReset}
-          onApplyFix={handleApplyFix}
-        />
-      </div>
+      <ChallengePanel
+        className="w-full md:w-[320px] shrink-0 h-auto md:h-full"
+        challenge={challenge}
+        status={status}
+        result={result}
+        isChecking={isChecking}
+        isDarkMode={isDarkMode}
+        onStart={handleStart}
+        onSubmit={handleSubmit}
+        onReset={handleReset}
+        onApplyFix={handleApplyFix}
+        onClose={onClose}
+      />
 
       {/* Right: your existing CodeEditor, always visible */}
       <div className="flex-1 h-[60vh] md:h-full relative min-h-[400px]">
